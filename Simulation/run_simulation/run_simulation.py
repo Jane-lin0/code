@@ -1,23 +1,27 @@
 import numpy as np
-from data_generate_process import data_generate
-from conditional_density_estimate import conditional_density_estimate
-from density_estimate import density_estimate
-from kernel_setting import gaussian_kernel
-from conditional_survival_estimate import conditional_survival_estimate
+from Simulation.data_generating.data_generate_process import data_generate
+from Simulation.conditional_density_estimate import conditional_density_estimate
+from Simulation.density_estimate import density_estimate
+from Simulation.kernel_setting import gaussian_kernel
+from Simulation.conditional_survival_estimate import conditional_survival_estimate
 
 '''
 data_generate
 '''
-df = data_generate(n=3000)
+n = 1000
+df = data_generate(N=n)
 
 '''
 conditional_density_estimate，A|X 的条件密度估计
 '''
-df_train = df.iloc[:1000, :]
-df_validation = df.iloc[1000:2000, :]
-df_test = df.iloc[2000:, :]
+n1 = int(n/3)
+n2 = int(2*n/3)
+df_train = df.iloc[:n1, :]
+df_validation = df.iloc[n1:n2, :]
+df_test = df.iloc[n2:, :]
+
 conditional_density_estimated, a_grid = conditional_density_estimate(df_train,df_validation,df_test,n_grid=1000)
-# n_grid 等于 len(df_test)？需进一步验证大于是否会报错
+# n_grid 等于 len(df_test)？大于会报错
 
 '''
 estimate density function of A by kernel density smoothing
@@ -37,9 +41,9 @@ pi_diag = np.diag(pi)  # len(df_test)
 '''
 estimate S(t|A,X)
 '''
-survival_estimated, time_grid = conditional_survival_estimate(df_test['t'], df_test['e']) # 根据 df['t'] 生成的 time_grid
-# A 的信息包含在 t 中，模型拟合并未用到 A 的数据
-# survival_estimated 根据时间排序，df_test 也是按 时间 t 排序的（因为 df_test 截取自 df)，因此 survival_estimated 的顺序也对应 A 和 X 的顺序
+survival_estimated, time_grid = conditional_survival_estimate(df_test['o'], df_test['e']) # 根据 df['o'] 生成的 time_grid
+# A 的信息包含在 o 中，模型拟合并未用到 A 的数据
+# survival_estimated 根据时间排序，df_test 也是按 时间排序的（因为 df_test 截取自 df)，因此 survival_estimated 的顺序也对应 A 和 X 的顺序
 
 '''
 kernel setting

@@ -1,5 +1,4 @@
 from lifelines import KaplanMeierFitter
-from data_generate_process import data_generate
 
 kmf = KaplanMeierFitter()
 

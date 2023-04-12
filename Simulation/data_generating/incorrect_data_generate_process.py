@@ -3,6 +3,8 @@ import pandas as pd
 
 # Set seed for reproducibility
 # np.random.seed(123)
+# Q：删失率如何控制？
+
 
 def data_generate(n):
     # 设置误差项的分布
@@ -10,11 +12,17 @@ def data_generate(n):
     epsilon1 = np.random.randn(n)
     epsilon2 = np.random.randn(n)
 
-    # x 对 t 和 y 的影响都是线性
     x = 3 + 4 * eta1  # 单个协变量，x 的期望为5
     a = 2 * x + epsilon1  # continuous treatment A 是期望为 2*x 的正态分布
-    t = (a - 10) ** 2 + x + epsilon2  # potential outcome
-    c = np.mean(t) + 1    # censor time   初步设定，需要再研究一下如何设置 censor time
+
+    time_mean = a + x + epsilon2
+    t = np.random.exponential(scale=time_mean)
+    # t = (a - 10) ** 2 + x + epsilon2  # potential outcome
+
+    censor_mean = 4 * x
+    c = np.random.exponential(scale=censor_mean)
+    # c = np.mean(t) + 1    # censor time   初步设定，需要再研究一下如何设置 censor time
+
     o = np.minimum(t, c)  # observed_time
     event = np.where(t <= c, 1, 0)  # delta = 1, event happens
 
@@ -30,5 +38,6 @@ def data_generate(n):
 
     return df
 
-df_test = data_generate(n=100)
+# df_test = data_generate(n=100)
+# event_rate = np.mean(df_test['e'])
 

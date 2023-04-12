@@ -3,12 +3,14 @@ import flexcode
 from flexcode.regression_models import NN
 import matplotlib.pyplot as plt
 
-def conditional_density_estimate(df_train,df_validation,df_test,n_grid):
+
+def conditional_density_estimate(df_train,df_validation,df_test, n_grid):
     """
     A|X 的条件密度估计
     @param df_train: 训练数据，要包含两列：单变量df_train['x'], 连续治疗df_train['a']
     @param df_validation: 调参数据
     @param df_test: 验证数据集
+    @param n_grid: 估计 n_grid 个条件密度函数点
     @return: conditional_density_estimated: ndarray:(len(df_test['x']),n_grid)
              a_grid: ndarray:(n_grid,1)
     """
