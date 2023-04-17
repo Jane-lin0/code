@@ -326,7 +326,8 @@ class SimulationModel():
         x_temp = self.scaler.fit_transform(X)
         # X[:,-1] = np.dot(X[:, :-1], treatment_weights)
         # treatment_col = self.scaler.fit_transform( np.dot(X_temp, treatment_weights).reshape(-1,1) )
-        treatment_col = np.dot(x_temp, treatment_weights).reshape(-1,1)  # X 对 treatment 的影响是线性的
+        treatment_col = np.dot(x_temp, treatment_weights).reshape(-1,1) + np.random.randn(num_samples).reshape(-1,1)
+        # X 对 treatment 的影响是线性的
         treatment_col = np.maximum(treatment_col, 0)
 
         X = np.hstack((X, treatment_col))

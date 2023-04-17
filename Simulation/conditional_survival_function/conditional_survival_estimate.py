@@ -1,4 +1,5 @@
 from lifelines import KaplanMeierFitter
+from Simulation.data_generating.data_generate_process import data_generate
 
 kmf = KaplanMeierFitter()
 
@@ -15,8 +16,9 @@ def conditional_survival_estimate(survival_time, event_indicator):
     time_grid = kmf.survival_function_.index.values
     return survival_estimated, time_grid
 
-# df = data_generate(n=100)
-# survival_estimated,time_grid = conditional_survival_estimate(df['t'],df['e'])
+
+df = data_generate(N=100)
+survival_estimated,time_grid = conditional_survival_estimate(df['o'],df['e'])
 
 
 # 在时间 tj 下，不同 A 和 X 对应的 S(t|A,X) 取值如何计算？
