@@ -15,37 +15,41 @@ df_train = pd.read_excel("C:/Users/janline/Desktop/data.xlsx",sheet_name='train'
 df_validation = pd.read_excel("C:/Users/janline/Desktop/data.xlsx",sheet_name='validation')
 df_test = pd.read_excel("C:/Users/janline/Desktop/data.xlsx",sheet_name='test')
 
-df = pd.concat([df_train, df_validation, df_test], axis=0)
+df = pd.concat([df_train, df_validation, df_test], axis=0).reset_index()
 
 '''
 conditional_density_estimate，A|X 的条件密度估计
 '''
 # conditional_density_estimated, a_grid = conditional_density_estimate(df_train, df_validation, df_test, n_grid=1000)
 # n_grid 等于 len(df_test)？可以大于
-cde_estimates = pd.read_excel("C:/Users/janline/Desktop/file_show.xlsx",sheet_name='sheet1')
-a_grid = pd.read_excel("C:/Users/janline/Desktop/file_show.xlsx",sheet_name='sheet2')
+cde_estimates = pd.read_excel("C:/Users/janline/Desktop/file_show.xlsx",sheet_name='Sheet1')
+a_grid = pd.read_excel("C:/Users/janline/Desktop/file_show.xlsx",sheet_name='Sheet2')
 
 # 输出 a_true 对应的 cde list
 n_obs = len(df_test)
-nns = [np.argmin(np.abs(a_grid - df_test['a'][i])) for i in range(n_obs)]
+a_approx_index = [np.argmin(np.abs(a_grid - df_test['a'][i])) for i in range(n_obs)]  # 长度和 df_test 一致
 cde_list =[]
-for x_index,grid_index in enumerate(nns):
-    cde_list.append(cde_estimates.iloc[x_index, grid_index])
+for x_index,grid_index in enumerate(a_approx_index):
+    cde_list.append(
+        cde_estimates.iloc[x_index, grid_index]
+    )
 
 '''
 estimate density function of A by kernel density smoothing
 '''
-density_estimated = density_estimate(df[['a']], a_grid)
-# df[['a']] 拟合模型，返回 a_grid 上的密度估计
+a_approx = np.array([a_grid.loc[i].item() for i in a_approx_index]).reshape(-1,1)
+density_estimated = density_estimate(df[['a']], a_approx)
+# df[['a']] 拟合模型，返回 a_approx 上的密度估计
+
+# density_estimated = density_estimate(df[['a']], a_grid)
+# # df[['a']] 拟合模型，返回 a_grid 上的密度估计
 
 '''
 pai(ai,xi) = p(a) / p(a|x)
 '''
-pi = density_estimated / conditional_density_estimated
-
+pi = density_estimated / cde_list
 # pi_diag = np.diag(pi)  # len(df_test)
-# a_grid 取的不一定是第 i 个样本对应的 ai，在计算 pi 和 kernel 时取的是 a_grid，如何解决？取和 a_true 最近的 a_grid 进行估计
-# a_grid 取的点较为密集时，是否可以忽略这个问题？
+# a_grid 取的不一定是第 i 个样本对应的 ai，在计算 pi 和 kernel 时取的是 a_grid，如何解决？  取与 a_true 最近的 a_grid 进行估计
 
 '''
 estimate S(t|A,X)

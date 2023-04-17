@@ -1,6 +1,6 @@
 import pandas as pd
 
-from Simulation.data_generating.DGP_COX import SimulationModel
+from Simulation.data_generating.DGP_pysurvival import SimulationModel
 
 sim = SimulationModel( survival_distribution='exponential',
                        risk_type='linear',
