@@ -1,5 +1,4 @@
-!pip install pysurvival
-
+# pip install pysurvival
 from pysurvival.models.survival_forest import RandomSurvivalForestModel
 #### 1 - Importing packages
 import numpy as np

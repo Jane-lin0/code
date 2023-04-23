@@ -1,31 +1,109 @@
 import numpy as np
 import pandas as pd
 from lifelines import KaplanMeierFitter
-from Simulation.data_generating.data_generate_process import data_generate
+from matplotlib import pyplot as plt
+from sklearn.model_selection import GridSearchCV
+from sksurv.linear_model import CoxPHSurvivalAnalysis
 from sksurv.ensemble import RandomSurvivalForest
-
-df_train = pd.read_excel("C:/Users/janline/Desktop/data.xlsx",sheet_name='train')
-df_validation = pd.read_excel("C:/Users/janline/Desktop/data.xlsx",sheet_name='validation')
-df_test = pd.read_excel("C:/Users/janline/Desktop/data.xlsx",sheet_name='test')
-
-df_train = pd.concat([df_train, df_validation], axis=0).reset_index()
-x_train = df_train['x'][:, np.newaxis]
-# y_train = pd.concat([df_train['e'],df_train['o']],axis=1)
-y_train = []
-for i in range(len(df_train)):
-    event_indicator = (df_train['e'][i] == 1)
-    time = df_train['o'][i]
-    yi = f'({event_indicator}, {time})'
-    # (False, 2178.),(True, 0.000951634919868563)
-    y_train.append(yi)
-y_train = np.array(y_train)
-# x_test =
+from sksurv.metrics import concordance_index_censored
 
 
-# def conditional_surv_estimation():
+def get_x_y(dataset, col_event, col_time):
+    y = np.empty(dtype=[(col_event, bool), (col_time, np.float64)], shape=dataset.shape[0])
+    y[col_event] = (dataset[col_event] == 1).values
+    y[col_time] = dataset[col_time].values
+    x = dataset.drop([col_event, col_time], axis=1)
+    return x, y
 
-rsf = RandomSurvivalForest(random_state=123)
-rsf.fit(x_train, y_train)
+
+estimator = CoxPHSurvivalAnalysis()
+
+
+def conditional_survival_estimate(df_train, df_test):
+    """
+    估计条件生存函数
+    @param df_train: 训练集
+    @param df_test: 测试集
+    @return: conditional_survival_estimates
+    time_grid
+    """
+    x_train, y_train = get_x_y(df_train, col_event='e', col_time='o')
+    x_test, y_test = get_x_y(df_test, col_event='e', col_time='o')
+    estimator.fit(x_train,y_train)
+
+    pred_survival = estimator.predict_survival_function(x_test)
+    conditional_survival_estimates = []
+    time_grid = estimator.event_times_  # time_grid 如何设置？
+    # time_points = np.arange(1, 1000)
+    for i, survival_func in enumerate(pred_survival):
+        conditional_survival_estimates.extend(survival_func(time_grid))
+
+    conditional_survival_estimates = np.array(conditional_survival_estimates).reshape(-1,len(time_grid))
+
+    return conditional_survival_estimates, time_grid
+
+
+# df_train = pd.read_excel("C:/Users/janline/Desktop/data.xlsx",sheet_name='train')
+# df_test = pd.read_excel("C:/Users/janline/Desktop/data.xlsx",sheet_name='test')
+#
+# cse, t_grid = conditional_survival_estimate(df_train, df_test)
+
+# x_train, y_train = get_x_y(df_train, col_event='e', col_time='o')
+# x_test, y_test = get_x_y(df_test, col_event='e', col_time='o')
+
+# estimator.fit(x_train, y_train)
+
+# coef = pd.Series(estimator.coef_, index=data_x_numeric.columns)
+# pred_surv = estimator.predict_survival_function(x_test.iloc[:5])
+# # time_points = np.arange(1, 1000)
+# time_points = estimator.event_times_
+# for i, surv_func in enumerate(pred_surv):
+#     plt.step(time_points, surv_func(time_points), where="post", label="Sample %d" % (i + 1))
+# plt.legend()
+# plt.show()
+
+# prediction = estimator.predict(x_test)
+# score = estimator.score(x_test, y_test)  # 0.67
+
+
+# rsf = RandomSurvivalForest(random_state=123)
+#
+# param_grid = {'n_estimators': np.array([int(i) for i in np.linspace(1,100,num=100)])}
+# grid_search = GridSearchCV(rsf, param_grid)
+# grid_search.fit(x_train, y_train)
+# score = grid_search.score(x_test, y_test)
+
+
+# rsf.fit(x_train, y_train)
+# survival_funcs = rsf.predict_survival_function(x_test.iloc[:6])
+#
+# # for i, s in enumerate(survival_funcs):
+# #     plt.step(rsf.event_times_, s, where="post", label=str(i))
+# for fn in survival_funcs:
+#     plt.step(fn.x, fn(fn.x), where="post")
+# # fn.x 表示时间 t，fn(fn.x) 表示对应时间 t 的生存函数值
+# plt.ylabel("Survival probability")
+# plt.xlabel("Time in days")
+# plt.legend()
+# plt.show()
+#
+# score = rsf.score(x_test, y_test)  # 0.56
+
+
+
+
+
+
+# x_train = df_train['x'][:, np.newaxis]
+# # y_train = pd.concat([df_train['e'],df_train['o']],axis=1)
+# y_train = []
+# for i in range(len(df_train)):
+#     event_indicator = (df_train['e'][i] == 1)
+#     time = df_train['o'][i]
+#     yi = f'({event_indicator}, {time})'
+#     # (False, 2178.),(True, 0.000951634919868563)
+#     y_train.append(yi)
+# y_train = np.array(y_train)
 
 
 # kmf = KaplanMeierFitter()
