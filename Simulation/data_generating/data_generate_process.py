@@ -20,9 +20,9 @@ def data_generate(N):
     return dataset
 
 
-n = 1000
+n = 10000
 df = data_generate(N=n)
-df_train, df_test = train_test_split(df, test_size=0.3, random_state=123)
+df_train, df_test = train_test_split(df, test_size=0.25, random_state=123)
 df_train.sort_values(by='o', ascending=True, inplace=True)
 df_test.sort_values(by='o', ascending=True, inplace=True)  # 是否要排序？
 # print(df_train.describe())

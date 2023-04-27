@@ -24,7 +24,7 @@ def conditional_survival_estimate(df_train, df_test):
     估计条件生存函数
     @param df_train: 训练集
     @param df_test: 测试集
-    @return: conditional_survival_estimates
+    @return: conditional_survival_estimates: (len(test_samples), len(time_grid))
     time_grid
     """
     x_train, y_train = get_x_y(df_train, col_event='e', col_time='o')
@@ -38,7 +38,7 @@ def conditional_survival_estimate(df_train, df_test):
     for i, survival_func in enumerate(pred_survival):
         conditional_survival_estimates.extend(survival_func(time_grid))
 
-    conditional_survival_estimates = np.array(conditional_survival_estimates).reshape(-1,len(time_grid))
+    conditional_survival_estimates = np.array(conditional_survival_estimates).reshape(-1, len(time_grid))
 
     return conditional_survival_estimates, time_grid
 
@@ -47,6 +47,8 @@ def conditional_survival_estimate(df_train, df_test):
 # df_test = pd.read_excel("C:/Users/janline/Desktop/data.xlsx",sheet_name='test')
 #
 # cse, t_grid = conditional_survival_estimate(df_train, df_test)
+#
+# cse_col1 = cse[:, 0]
 
 # x_train, y_train = get_x_y(df_train, col_event='e', col_time='o')
 # x_test, y_test = get_x_y(df_test, col_event='e', col_time='o')
