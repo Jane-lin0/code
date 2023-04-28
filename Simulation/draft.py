@@ -1,16 +1,33 @@
 import numpy as np
 import pandas as pd
+# from Simulation.data_generating.data_generate_process import data_generate
 
+# N = 100
+# path = f"C:/Users/janline/Desktop/simulation_data/{N}"
+# data_generate(N, path)
+
+# path = "C:/Users/janline/Desktop/"
+# df_train = pd.read_excel(path+"data.xlsx",sheet_name='train')
 
 # list_t = [1,2,3,4,5,6]
 #
 # weight0 = np.empty(shape=(0,6))
-# list_normalization = np.array(list_t) / sum(list_t)
-# weight = np.vstack([weight0,list_normalization])
+# # list_normalization = np.array(list_t) / sum(list_t)
+# # weight = np.vstack([weight0,list_normalization])
+# weight = np.vstack([weight0,list_t])
 #
 # list_t1 = [1,2,3,4,5,5]
-# list_normalization1 = np.array(list_t1) / sum(list_t1)
-# weight = np.vstack([weight, list_normalization1])
+# # list_normalization1 = np.array(list_t1) / sum(list_t1)
+# # weight = np.vstack([weight, list_normalization1])
+# weight = np.vstack([weight,list_t1])
+#
+# n = weight.shape[0]
+# res = []
+# for i in range(n):
+#     index = np.argmin(np.abs(weight[i, :] - 3))
+#     res.append(weight[i, index])
+
+
 # arr = np.array(list_t).reshape(2,3)
 # arr_T = arr.T
 # multiply = arr_T @ arr

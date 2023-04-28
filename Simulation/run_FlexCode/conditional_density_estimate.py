@@ -1,12 +1,29 @@
+import numpy as np
 import pandas as pd
 import scipy.stats
 import flexcode
 from flexcode.regression_models import NN
 import matplotlib.pyplot as plt
-from Simulation.data_generating.data_generate_process import data_generate
+
+
+def cde_adjust(cde_list):
+    """
+    @param cde_row: 含 0 值的条件密度估计值
+    @return: 不含 0 值的 cde
+    """
+    cde = []
+    for val in cde_list:
+        if val == 0:
+            val += 1e-8
+        cde.append(val)
+    cde = np.array(cde)
+    return cde
+
+
 '''
 估计的条件密度几乎是零值
 '''
+
 
 def conditional_density_estimate(df_train,df_validation,df_test, n_grid):
     """
