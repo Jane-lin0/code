@@ -1,6 +1,27 @@
 import numpy as np
 import pandas as pd
 # from Simulation.data_generating.data_generate_process import data_generate
+from sksurv.linear_model import CoxPHSurvivalAnalysis
+# from sksurv.metrics import concordance_index_censored, brier_score_loss, integrated_brier_score
+
+
+
+# treatment_idx = np.random.randint(low=0, high=10, size=3)
+# colors = ['r', 'g', 'b']
+# for idx, color in zip(treatment_idx, colors):
+#     print(idx, color)
+
+# estimator = CoxPHSurvivalAnalysis()
+# estimator.fit(data_x_numeric, data_y)
+# estimator.score()
+#
+# # Estimate the survival function
+# survival = estimator.predict_survival_function(data[['time']])
+#
+# # Calculate the integrated Brier score
+# ibs = integrated_brier_score(survival, data['status'], data['time'], t_max=100)
+
+
 
 # N = 100
 # path = f"C:/Users/janline/Desktop/simulation_data/{N}"
@@ -11,10 +32,10 @@ import pandas as pd
 
 # list_t = [1,2,3,4,5,6]
 #
-# weight0 = np.empty(shape=(0,6))
+# weight = np.empty(shape=(0,6))
 # # list_normalization = np.array(list_t) / sum(list_t)
 # # weight = np.vstack([weight0,list_normalization])
-# weight = np.vstack([weight0,list_t])
+# weight = np.vstack([weight,list_t])
 #
 # list_t1 = [1,2,3,4,5,5]
 # # list_normalization1 = np.array(list_t1) / sum(list_t1)

@@ -31,7 +31,7 @@ def conditional_survival_estimate(df_train, df_test):
     x_test, y_test = get_x_y(df_test, col_event='e', col_time='o')
     estimator.fit(x_train,y_train)
 
-    pred_survival = estimator.predict_survival_function(x_test)
+    pred_survival = estimator.predict_survival_function(x_test)  # test set 中每个样本点的生存函数估计
     conditional_survival_estimates = []
     time_grid = estimator.event_times_  # time_grid 如何设置？
     # time_points = np.arange(1, 1000)

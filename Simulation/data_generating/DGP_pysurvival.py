@@ -337,6 +337,8 @@ class SimulationModel():
         X_std = self.scaler.fit_transform(X)
         BX = self.risk_function(X_std)
 
+        lambda_t = np.exp(BX)  # 指数分布的真实参数
+
         # Building the survival times
         T = self.time_function(BX)
         # C = np.random.normal( loc = self.censored_parameter,scale = 5, size = num_samples )
@@ -347,8 +349,8 @@ class SimulationModel():
 
         # Building dataset
         self.features = columns
-        self.dataset = pd.DataFrame(data=np.c_[X, time, E],
-                                    columns=columns + ['time', 'event'])
+        self.dataset = pd.DataFrame(data=np.c_[X, time, E, lambda_t],
+                                    columns=columns + ['time', 'event','parameter'])
 
         # Building the time axis and time buckets
         self.times = np.linspace(0., max(self.dataset['time']), self.bins)

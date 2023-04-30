@@ -15,7 +15,7 @@ def data_generate(N, path):
                             feature_weights=[-2, 1, 2]+[1],
                             treatment_weights=[1, 0, 0])
     # lambda = exp(-1 * x + 1 * a) * alpha , a = 2 * x
-    dataset.columns = ['x1', 'x2', 'x3', 'a', 'o', 'e']
+    dataset.columns = ['x1', 'x2', 'x3', 'a', 'o', 'e', 'lambda']
     # dataset.sort_values(by='o',ascending=True,inplace=True)  # 便于后续条件生存函数的估计
 
     df = dataset

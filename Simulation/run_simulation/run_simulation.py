@@ -1,10 +1,14 @@
 import numpy as np
 import pandas as pd
+from scipy.stats import expon
+from sksurv.metrics import integrated_brier_score
+from matplotlib import pyplot as plt
 
 from Simulation.kernel_density_smoothing.density_estimate import density_estimate
 from Simulation.kernel_setting import gaussian_kernel
-from Simulation.conditional_survival_function.conditional_survival_estimate import conditional_survival_estimate
+from Simulation.conditional_survival_function.conditional_survival_estimate import conditional_survival_estimate,get_x_y
 from Simulation.run_FlexCode.conditional_density_estimate import cde_adjust
+
 '''
 data
 '''
@@ -53,7 +57,7 @@ pi = density_estimated / cde  # ndarray:(len(df_test),)
 '''
 conditional survival function estimate S(t|A,X)
 '''
-conditional_survival_estimated, time_grid = conditional_survival_estimate(df_train, df_test)
+conditional_survival_estimated, time_grid = conditional_survival_estimate(df_train, df_test) # 未调参
 # ndarray:(len(df_test), len(time_grid))
 
 # A 类似于协变量 X
@@ -63,15 +67,14 @@ kernel setting, calculate Sa(t)：每个 a_grid 下的生存函数估计 (t_grid
 '''
 # a = 1
 h = 0.7  # 交叉验证选择
-treatment_grid = np.linspace(min(a_approx), max(a_approx), num=100)  # 连续 treatment 取值网格点
+treatment_grid = np.linspace(min(a_approx), max(a_approx), num=100)  # 连续 treatment 估计取值的网格点，可调整
 # 转化为权重计算
-n_sample = len(pi)
-weight = np.empty(shape=(0, n_sample))
+weight = np.empty(shape=(0, n_test))
 for a in treatment_grid:
     kernel_values = gaussian_kernel(a_approx, a, h)
     w_a = pi * kernel_values  # ndarray:(len(df_test),)
     # w_row = []
-    # for j in range(n_sample):
+    # for j in range(n_test):
     #     weight_ij = pi[j].item() * kernel_values[j].item()
     #     w_row.append(weight_ij)
     # w_normalization = np.array(w_row) / np.sum(w_row)
@@ -82,6 +85,30 @@ for a in treatment_grid:
 counterfactual_survival = weight @ conditional_survival_estimated  # ndarray:(len(treatment_grid), len(time_grid))
 
 # true counterfactual survival
+true_survival = np.empty(shape=(0, len(time_grid)))
+for a in treatment_grid:
+    lambda_idx = np.argmin(np.abs(df_test['a'] - a))
+    lambda_i = df_test['lambda'][lambda_idx]
+    survival_a = []
+    for t in time_grid:
+        survival_t = 1 - expon.cdf(t, scale=1/lambda_i)
+        survival_a.append(survival_t)
+    true_survival = np.vstack([true_survival, survival_a])  # ndarray:(len(treatment_grid), len(time_grid))
+
+treatment_idx = np.random.randint(low=0, high=len(treatment_grid)-1, size=3)
+colors = ['r', 'g', 'b']
+for idx, color in zip(treatment_idx, colors):
+    survival_est = counterfactual_survival[idx, :]
+    plt.step(time_grid, survival_est, where="post", label=f"survival_est_{idx}", color=color)
+    survival_true = true_survival[idx, :]
+    plt.step(time_grid, survival_true, where="post", label=f"survival_true_{idx}", color=color, linestyle='--')
+plt.legend()
+plt.show()
+
+# Measuring the Performance of Survival Models
+x_train, y_train = get_x_y(df_train, col_event='e', col_time='o')
+x_test, y_test = get_x_y(df_test, col_event='e', col_time='o')
+IBS = integrated_brier_score(y_train, y_test, counterfactual_survival, time_grid)  # 并未用到真实生存函数
 
 
 # median potential survival time，Sa(t) = P( T(a) >= t ) = 0.5 时对应的 time_grid
@@ -91,6 +118,8 @@ for i in range(n_time):
     index = np.argmin(np.abs(counterfactual_survival[i, :] - 0.5))
     median_survival.append(time_grid[index])
 median_survival = np.array(median_survival)
+
+
 
 
 # a = 3.766
