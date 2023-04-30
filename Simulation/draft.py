@@ -6,6 +6,42 @@ from sksurv.linear_model import CoxPHSurvivalAnalysis
 
 
 
+
+
+# a = np.random.choice(250)
+
+# df = pd.DataFrame({'col1': [1, 2, 3], 'col2': [4, 5, 6]}, index=[1,3,5])
+# idx = df['col1'].idxmax()
+# row_to_drop = df.loc[idx]
+# df_temp = row_to_drop.to_frame().T
+
+
+# df = pd.DataFrame({'col1': [1, 2, 3], 'col2': [4, 5, 6]}, index=[1,3,5]).reset_index(drop=True)
+# idx = np.argmin(df['col1'])
+# row_to_drop = df.loc[idx, :]
+# df = df.drop(idx)
+
+# test = np.random.randint(1,10,size=5)
+# idx = np.argmin(test)
+
+# time_points = np.arange(1, 1000)
+
+N = 1000
+path = f"C:/Users/janline/Desktop/simulation_data/{N}"
+df_test = pd.read_excel(path+"data.xlsx",sheet_name='test')
+df_train = pd.read_excel(path+"data.xlsx",sheet_name='train')
+
+# idx_test = np.random.choice(df_test.index, size=1).item()
+# idx_test = np.random.choice(df_test.index, size=1)
+# row_to_train = df_test.loc[idx_test]
+
+print(df_test.describe())
+print(df_train.describe())
+# print(type(df_test['o']))
+# print(df_test['o'].min())
+# print(type(df_test['o'].min()))
+# print(df_test['o'].min() < df_test['o'].max())
+
 # treatment_idx = np.random.randint(low=0, high=10, size=3)
 # colors = ['r', 'g', 'b']
 # for idx, color in zip(treatment_idx, colors):

@@ -19,28 +19,30 @@ def get_x_y(dataset, col_event, col_time):
 estimator = CoxPHSurvivalAnalysis()
 
 
-def conditional_survival_estimate(df_train, df_test):
+def conditional_survival_estimate(df_train, df_test, time_grid):
     """
     估计条件生存函数
     @param df_train: 训练集
     @param df_test: 测试集
+    @param time_grid: 估计条件生存函数的时间点
     @return: conditional_survival_estimates: (len(test_samples), len(time_grid))
-    time_grid
     """
     x_train, y_train = get_x_y(df_train, col_event='e', col_time='o')
     x_test, y_test = get_x_y(df_test, col_event='e', col_time='o')
-    estimator.fit(x_train,y_train)
+    estimator.fit(x_train, y_train)
 
     pred_survival = estimator.predict_survival_function(x_test)  # test set 中每个样本点的生存函数估计
     conditional_survival_estimates = []
-    time_grid = estimator.event_times_  # time_grid 如何设置？
+    # time_grid = estimator.event_times_  # time_grid 如何设置？基于 test set 的生存时间设置
     # time_points = np.arange(1, 1000)
     for i, survival_func in enumerate(pred_survival):
+        # for time in time_grid:
+        #     conditional_survival_estimates.append(survival_func(time))
         conditional_survival_estimates.extend(survival_func(time_grid))
 
-    conditional_survival_estimates = np.array(conditional_survival_estimates).reshape(-1, len(time_grid))
+    conditional_survival_estimates = np.array(conditional_survival_estimates).reshape(len(df_test), len(time_grid))
 
-    return conditional_survival_estimates, time_grid
+    return conditional_survival_estimates
 
 
 # df_train = pd.read_excel("C:/Users/janline/Desktop/data.xlsx",sheet_name='train')
