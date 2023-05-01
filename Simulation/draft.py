@@ -1,12 +1,21 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 # from Simulation.data_generating.data_generate_process import data_generate
 from sksurv.linear_model import CoxPHSurvivalAnalysis
 # from sksurv.metrics import concordance_index_censored, brier_score_loss, integrated_brier_score
 
-
-
-
+# my_dict = {'a': 3, 'b': 2, 'c': 1}
+# min_value = min(my_dict.items(), key=lambda x: x[1])[1]
+#
+# x = my_dict.keys()
+# y = my_dict.values()
+#
+# plt.figure()
+# plt.plot(x, y, marker='o')
+# plt.xlabel('x')
+# plt.ylabel('y')
+# plt.show()
 
 # a = np.random.choice(250)
 
@@ -26,17 +35,17 @@ from sksurv.linear_model import CoxPHSurvivalAnalysis
 
 # time_points = np.arange(1, 1000)
 
-N = 1000
-path = f"C:/Users/janline/Desktop/simulation_data/{N}"
-df_test = pd.read_excel(path+"data.xlsx",sheet_name='test')
-df_train = pd.read_excel(path+"data.xlsx",sheet_name='train')
-
-# idx_test = np.random.choice(df_test.index, size=1).item()
-# idx_test = np.random.choice(df_test.index, size=1)
-# row_to_train = df_test.loc[idx_test]
-
-print(df_test.describe())
-print(df_train.describe())
+# N = 1000
+# path = f"C:/Users/janline/Desktop/simulation_data/{N}"
+# df_test = pd.read_excel(path+"data.xlsx",sheet_name='test')
+# df_train = pd.read_excel(path+"data.xlsx",sheet_name='train')
+#
+# # idx_test = np.random.choice(df_test.index, size=1).item()
+# # idx_test = np.random.choice(df_test.index, size=1)
+# # row_to_train = df_test.loc[idx_test]
+#
+# print(df_test.describe())
+# print(df_train.describe())
 # print(type(df_test['o']))
 # print(df_test['o'].min())
 # print(type(df_test['o'].min()))

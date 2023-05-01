@@ -68,20 +68,51 @@ conditional_survival_estimated = conditional_survival_estimate(df_train, df_test
 kernel setting, calculate Sa(t)：每个 a_grid 下的生存函数估计
 '''
 # a = 1
-h = 0.7  # 交叉验证选择
 # treatment_grid = np.linspace(min(a_approx), max(a_approx), num=n_test)  # 连续 treatment 估计取值的网格点，可调整
 treatment_grid = a_approx
 # 转化为权重计算
+
+# h = 0.7  # 交叉验证选择
+IBS_for_bandwidth = dict()
+for h in np.logspace(0.01, 1, 100):
+    weight = np.empty(shape=(0, n_test))
+    for a in treatment_grid:
+        kernel_values = gaussian_kernel(a_approx, a, h)
+        w_a = pi * kernel_values  # ndarray:(len(df_test),)
+        w_normalization = w_a / np.sum(w_a)  # 结果相对正常，含非 0 值
+        weight = np.vstack([weight, w_normalization.reshape(1, -1)])
+        # final result: weight = { ndarray:(len(treatment_grid), len(df_test))}
+
+    counterfactual_survival = weight @ conditional_survival_estimated
+    # ndarray:(len(treatment_grid), len(time_grid))
+
+    # integrated_brier_score 评估生存函数估计
+    x_train, y_train = get_x_y(df_train, col_event='e', col_time='o')
+    x_test, y_test = get_x_y(df_test, col_event='e', col_time='o')
+    IBS = integrated_brier_score(y_train, y_test, counterfactual_survival, time_grid)  # 并未用到真实生存函数
+    IBS_for_bandwidth[h] = IBS
+
+
+# plot bandwidth-Integrated brier score
+h_values = list(IBS_for_bandwidth.keys())
+ibs_values = list(IBS_for_bandwidth.values())
+plt.figure()
+plt.plot(h_values, ibs_values)
+plt.xlabel('bandwidth')
+plt.ylabel('Integrated brier score')
+plt.show()
+
+
+# 计算最佳 bandwidth 下的反事实生存函数估计
+h_best, IBS_min = min(IBS_for_bandwidth.items(), key=lambda x: x[1])
 weight = np.empty(shape=(0, n_test))
 for a in treatment_grid:
-    kernel_values = gaussian_kernel(a_approx, a, h)
+    kernel_values = gaussian_kernel(a_approx, a, h_best)
     w_a = pi * kernel_values  # ndarray:(len(df_test),)
     w_normalization = w_a / np.sum(w_a)  # 结果相对正常，含非 0 值
     weight = np.vstack([weight, w_normalization.reshape(1, -1)])
     # final result: weight = { ndarray:(len(treatment_grid), len(df_test))}
-
 counterfactual_survival = weight @ conditional_survival_estimated
-# ndarray:(len(treatment_grid), len(time_grid))
 
 
 # true counterfactual survival
@@ -91,15 +122,9 @@ for a in treatment_grid:
     lambda_i = df_test['lambda'][lambda_idx]
     survival_a = []
     for t in time_grid:
-        survival_t = 1 - expon.cdf(t, scale=1/lambda_i)
+        survival_t = 1 - expon.cdf(t, scale=1 / lambda_i)
         survival_a.append(survival_t)
     true_survival = np.vstack([true_survival, survival_a])  # ndarray:(len(treatment_grid), len(time_grid))
-
-
-# integrated_brier_score 评估生存函数估计
-x_train, y_train = get_x_y(df_train, col_event='e', col_time='o')
-x_test, y_test = get_x_y(df_test, col_event='e', col_time='o')
-IBS = integrated_brier_score(y_train, y_test, counterfactual_survival, time_grid)  # 并未用到真实生存函数
 
 
 # median potential survival time
