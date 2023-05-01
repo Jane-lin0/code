@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from random import sample
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold
 from Simulation.data_generating.DGP_pysurvival import SimulationModel
 
 
@@ -47,6 +47,8 @@ sim = SimulationModel( survival_distribution='exponential',
                        alpha=1,
                        beta=1
                        )
+cv = 5
+kf = KFold(n_splits=cv, shuffle=True, random_state=123)
 
 
 def data_generate(n, save_path):
@@ -58,22 +60,23 @@ def data_generate(n, save_path):
     # dataset.sort_values(by='o',ascending=True,inplace=True)  # 便于后续条件生存函数的估计
 
     df = dataset
-    df_train, df_test = train_test_split(df, test_size=0.25, random_state=123)
-    # stratify=df['o']报错：ValueError: The least populated class in y has only 1 member, which is too few.
-    # The minimum number of groups for any class cannot be less than 2.
+    # df_train, df_test = train_test_split(df, test_size=0.25, random_state=123)
+    i = 0
+    for train_index, test_index in kf.split(df):
+        df_train = df.loc[train_index]
+        df_test = df.loc[test_index]
 
-    df_train, df_test = time_moderate(df_train, df_test)
+        df_train, df_test = time_moderate(df_train, df_test)  # 调整时间，避免计算综合 brier score 时报错
 
-    df_train.sort_values(by='o', ascending=True, inplace=True)
-    df_test.sort_values(by='o', ascending=True, inplace=True)  # 是否要排序？
-    # print(df_train.describe())
-    # print(df_test.describe())
+        df_train.sort_values(by='o', ascending=True, inplace=True)
+        df_test.sort_values(by='o', ascending=True, inplace=True)  # 是否要排序？要排序，排序后样本的顺序和treatment的顺序一致，否则 IBS 的计算有误
 
-    # 将数据存储到桌面
-    writer = pd.ExcelWriter(save_path + 'data.xlsx', engine='xlsxwriter')
-    df_train.to_excel(writer, sheet_name='train', index=False)
-    df_test.to_excel(writer, sheet_name='test', index=False)
-    writer.save()
+        # 将数据存储到本地
+        writer = pd.ExcelWriter(save_path + f"data{i}.xlsx", engine='xlsxwriter')
+        df_train.to_excel(writer, sheet_name='train', index=False)
+        df_test.to_excel(writer, sheet_name='test', index=False)
+        writer.save()
+        i += 1
     print(f"dataset generated and saved to {save_path}")
 
 

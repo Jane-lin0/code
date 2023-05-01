@@ -1,9 +1,29 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import KFold
 # from Simulation.data_generating.data_generate_process import data_generate
 from sksurv.linear_model import CoxPHSurvivalAnalysis
 # from sksurv.metrics import concordance_index_censored, brier_score_loss, integrated_brier_score
+
+# lis = [1,2,3,4,5]
+# a = np.mean(lis)
+
+# cv = 5
+# for i in range(cv):
+#     print(i+1)
+
+# N = 1000
+# path = f"C:/Users/janline/Desktop/simulation_data/{N}"
+# df_train = pd.read_excel(path+"data.xlsx",sheet_name='train')
+# df_test = pd.read_excel(path+"data.xlsx",sheet_name='test')
+# df = pd.concat([df_train, df_test], axis=0).reset_index(drop=True)
+#
+# kf = KFold(n_splits=5, shuffle=True, random_state=42)  # 随机抽取索引
+# # 进行交叉验证
+# for train_index, test_index in kf.split(df):
+#     df_val = df.loc[test_index]
+#     # print(test_index, "="*50)
 
 # my_dict = {'a': 3, 'b': 2, 'c': 1}
 # min_value = min(my_dict.items(), key=lambda x: x[1])[1]
