@@ -4,7 +4,16 @@ import pandas as pd
 from sklearn.model_selection import KFold
 # from Simulation.data_generating.data_generate_process import data_generate
 from sksurv.linear_model import CoxPHSurvivalAnalysis
-# from sksurv.metrics import concordance_index_censored, brier_score_loss, integrated_brier_score
+from sksurv.metrics import concordance_index_censored, integrated_brier_score
+from sksurv.metrics import concordance_index_censored
+
+# a = np.logspace(0.01, 1, 10)
+# b = np.logspace(-2, 0, num=10)  # 带宽取值范围在0.01到1之间
+# estimator = CoxPHSurvivalAnalysis()
+# estimator.fit(data_x_numeric, data_y)
+# prediction = estimator.predict(data_x_numeric)
+# result = concordance_index_censored(data_y["Status"], data_y["Survival_in_days"], prediction)
+# c_index = result[0]
 
 # lis = [1,2,3,4,5]
 # a = np.mean(lis)
@@ -13,11 +22,29 @@ from sksurv.linear_model import CoxPHSurvivalAnalysis
 # for i in range(cv):
 #     print(i+1)
 
+# train_time = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+# train_event = np.array([1, 1, 0, 1, 0])
+# test_time = np.array([6.0, 7.0, 8.0])
+# # 检查测试集时间是否超出最大观测时间点
+# extends = test_time > np.max(train_time)
+# if np.any(extends):
+#     # 将超出的时间值替换为最大观测时间点
+#     test_time = np.where(extends, np.max(train_time), test_time)  # 直接替换
+
+
 # N = 1000
 # path = f"C:/Users/janline/Desktop/simulation_data/{N}"
 # df_train = pd.read_excel(path+"data.xlsx",sheet_name='train')
 # df_test = pd.read_excel(path+"data.xlsx",sheet_name='test')
 # df = pd.concat([df_train, df_test], axis=0).reset_index(drop=True)
+#
+# # 检查测试集时间是否超出最大观测时间点
+# extends = df_test['o'] > np.max(df_train['o'])
+# if np.any(extends):
+#     # 将超出的时间值替换为最大观测时间点
+#     test_time = np.where(extends, np.max(df_train['o']), df_test['o'])
+
+
 #
 # kf = KFold(n_splits=5, shuffle=True, random_state=42)  # 随机抽取索引
 # # 进行交叉验证
@@ -26,7 +53,7 @@ from sksurv.linear_model import CoxPHSurvivalAnalysis
 #     # print(test_index, "="*50)
 
 # my_dict = {'a': 3, 'b': 2, 'c': 1}
-# min_value = min(my_dict.items(), key=lambda x: x[1])[1]
+# k, min_value = min(my_dict.items(), key=lambda x: x[1])
 #
 # x = my_dict.keys()
 # y = my_dict.values()

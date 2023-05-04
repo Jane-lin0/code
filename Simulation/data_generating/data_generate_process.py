@@ -7,7 +7,7 @@ from Simulation.data_generating.DGP_pysurvival import SimulationModel
 
 def time_moderate(df_train, df_test):
     """
-    将 df_train 的时间范围调整到在 df_test 之内，即 df_train['o']  被包含于 df_test['o']
+    将 df_train 的时间范围调整到在 df_test 之内，即 df_train['o'] 被包含于 df_test['o']，IBS 的计算要求
     @param df_train:
     @param df_test:
     @return:
@@ -41,12 +41,48 @@ def time_moderate(df_train, df_test):
 
     return df_train, df_test
 
+# def time_moderate(df_train, df_test):
+#     """
+#     将 df_test 的时间范围调整到在 df_train 之内
+#     @param df_train:
+#     @param df_test:
+#     @return:
+#     """
+#     while df_test['o'].min() < df_train['o'].min():
+#         idx_test = df_test['o'].idxmin()  # int
+#         row_to_train = df_test.loc[idx_test]  # series
+#         df_test = df_test.drop(idx_test)
+#
+#         # idx_test = df_test['o'].idxmin()
+#         idx_train = np.random.choice(df_train.index, size=1).item()  # 为保持一致，转化成int
+#         row_to_test = df_train.loc[idx_train]
+#         df_train = df_train.drop(idx_train)
+#
+#         df_train = pd.concat([df_train, row_to_train.to_frame().T], axis=0)
+#         df_test = pd.concat([df_test, row_to_test.to_frame().T], axis=0)
+#
+#     while df_test['o'].max() > df_train['o'].max():
+#         idx_train = df_test['o'].idxmax()
+#         row_to_test = df_test.loc[idx_train]
+#         df_test = df_test.drop(idx_train)
+#
+#         # idx_test = df_train['o'].idxmax()
+#         idx_test = np.random.choice(df_train.index, size=1).item()
+#         row_to_train = df_train.loc[idx_test]
+#         df_train = df_train.drop(idx_test)
+#
+#         df_train = pd.concat([df_train, row_to_train.to_frame().T])
+#         df_test = pd.concat([df_test, row_to_test.to_frame().T])
+#
+#     return df_train, df_test
+
 
 sim = SimulationModel( survival_distribution='exponential',
                        risk_type='linear',
                        alpha=1,
                        beta=1
                        )
+
 cv = 5
 kf = KFold(n_splits=cv, shuffle=True, random_state=123)
 
@@ -80,87 +116,11 @@ def data_generate(n, save_path):
     print(f"dataset generated and saved to {save_path}")
 
 
-# N = 1000
-# path = f"C:/Users/janline/Desktop/simulation_data/{N}"
-# data_generate(N, path)
+N = 1000
+path = f"C:/Users/janline/Desktop/simulation_data/{N}"
+data_generate(N, path)
 
 
-# def time_moderate(df_train, df_test):
-#     """
-#     将 df_test 的时间范围调整到在 df_train 之内
-#     @param df_train:
-#     @param df_test:
-#     @return:
-#     """
-#     while df_test['o'].min() < df_train['o'].min():
-#         idx_test = df_test['o'].idxmin()  # int
-#         row_to_train = df_test.loc[idx_test]  # series
-#         df_test = df_test.drop(idx_test)
-#
-#         # idx_test = df_test['o'].idxmin()
-#         idx_train = np.random.choice(df_train.index, size=1).item()  # 不加 item 是ndarray，row_to_train = df_train.loc[idx_test]是dataframe，为保持一致，转化成int
-#         row_to_test = df_train.loc[idx_train]
-#         df_train = df_train.drop(idx_train)
-#
-#         df_train = pd.concat([df_train, row_to_train.to_frame().T], axis=0)
-#         df_test = pd.concat([df_test, row_to_test.to_frame().T], axis=0)
-#
-#     while df_test['o'].max() > df_train['o'].max():
-#         idx_train = df_test['o'].idxmax()
-#         row_to_test = df_test.loc[idx_train]
-#         df_test = df_test.drop(idx_train)
-#
-#         # idx_test = df_train['o'].idxmax()
-#         idx_test = np.random.choice(df_train.index, size=1).item()
-#         row_to_train = df_train.loc[idx_test]
-#         df_train = df_train.drop(idx_test)
-#
-#         df_train = pd.concat([df_train, row_to_train.to_frame().T])
-#         df_test = pd.concat([df_test, row_to_test.to_frame().T])
-#
-#     return df_train, df_test
-
-
-# while df_train['o'].min() < df_test['o'].min():
-#     df_train = df_train.reset_index(drop=True)
-#     df_train = df_train.reset_index(drop=True)
-#
-#     idx_train = np.argmin(df_train['o'])
-#     row_to_test = df_train.loc[idx_train]
-#     df_train = df_train.drop(idx_train)
-#
-#     # idx_test = np.argmin(df_test['o'])
-#     idx_test = np.random.choice(df_test.index, size=1).item()
-#     row_to_train = df_test.loc[idx_test]
-#     df_test = df_test.drop(idx_test)
-#
-#     df_test.append(row_to_test)
-#     df_train.append(row_to_train)
-#     # df_test = pd.concat([df_test, row_to_test], axis=0)
-#     # df_train = pd.concat([df_train, row_to_train], axis=0)
-#     # df_test = np.vstack([df_test, row_to_test])
-#     # df_train = np.vstack([df_train, row_to_train])
-#
-# # # while np.max(df_train['o']) > np.max(df_test['o']):
-# while df_train['o'].max() > df_test['o'].max():
-#     df_train = df_train.reset_index(drop=True)
-#     df_train = df_train.reset_index(drop=True)
-#
-#     idx_train = np.argmax(df_train['o'])
-#     row_to_test = df_train.loc[idx_train]
-#     df_train = df_train.drop(idx_train)
-#
-#     # idx_test = np.argmax(df_test['o'])
-#     idx_test = np.random.choice(df_test.index, size=1).item()
-#     row_to_train = df_test.loc[idx_test]
-#     df_test = df_test.drop(idx_test)
-#
-#     df_test.append(row_to_test)
-#     df_train.append(row_to_train)
-#     # df_test = pd.concat([df_test, row_to_test], axis=0)
-#     # df_train = pd.concat([df_train, row_to_train], axis=0)
-#     # df_test = np.vstack([df_test, row_to_test])
-#     # df_train = np.vstack([df_train, row_to_train])
 
 
 # n = 10000

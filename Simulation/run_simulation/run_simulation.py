@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import expon
-from sksurv.metrics import integrated_brier_score
+from sksurv.metrics import integrated_brier_score, concordance_index_censored
 from matplotlib import pyplot as plt
 
 from Simulation.kernel_density_smoothing.density_estimate import density_estimate
@@ -17,9 +17,12 @@ cv = 5
 path = f"C:/Users/janline/Desktop/simulation_data/{N}"
 
 # h = 0.7  # bandwidth 交叉验证选择
-IBS_for_bandwidth = dict()
-for h in np.logspace(0.01, 1, 100):
+ibs_for_bandwidth = dict()
+cindex_for_bandwidth = dict()
+# for h in np.logspace(0.01, 1, 10):  # 100 个 h 运行很久
+for h in np.logspace(-2, 0, num=10):
     ibs_list = []
+    cindex_list = []
     for i in range(cv):  # 循环拟合数据集
         df_train = pd.read_excel(path+f"data{i}.xlsx", sheet_name='train')
         df_test = pd.read_excel(path+f"data{i}.xlsx", sheet_name='test')
@@ -38,7 +41,6 @@ for h in np.logspace(0.01, 1, 100):
         for x_index, grid_index in enumerate(a_approx_index):
             cde_val = cde_estimates.iloc[x_index, grid_index]
             cde_list.append(cde_val)
-
         cde = cde_adjust(cde_list)  # 给 cde_list 的零值加上一个很小的值，避免求 pi 时除以 0 得到 inf
 
         '''
@@ -87,23 +89,43 @@ for h in np.logspace(0.01, 1, 100):
         # integrated_brier_score 评估生存函数估计
         x_train, y_train = get_x_y(df_train, col_event='e', col_time='o')
         x_test, y_test = get_x_y(df_test, col_event='e', col_time='o')
-        ibs = integrated_brier_score(y_train, y_test, counterfactual_survival, time_grid)  # 并未用到真实生存函数
-        ibs_list.append(ibs)
+        # ibs = integrated_brier_score(y_train, y_test, counterfactual_survival, time_grid)  # 并未用到真实生存函数
+        # ibs_list.append(ibs)
 
-    IBS_for_bandwidth[h] = np.mean(ibs_list)
+        t_approx_index = [np.argmin(np.abs(time_grid - df_test['o'][i])) for i in range(n_test)]  # 长度和 df_test 一致
+        survival_est = []
+        for x_index, grid_index in enumerate(t_approx_index):
+            val = counterfactual_survival[x_index, grid_index]
+            survival_est.append(val)
+        survival_est = np.array(survival_est)
+        event = (df_test['e'] == 1).values
+        time = df_test['o'].values
+        c_index = concordance_index_censored(event, time, estimate=survival_est)
+        cindex_list.append(c_index)
 
+    # ibs_for_bandwidth[h] = np.mean(ibs_list)
+    cindex_for_bandwidth[h] = np.mean(cindex_list)
+
+# plot bandwidth and c_index
+h_values = list(cindex_for_bandwidth.keys())
+cindex_values = list(cindex_for_bandwidth.values())
+plt.figure()
+plt.plot(h_values, cindex_values, marker='o')
+plt.xlabel('bandwidth')
+plt.ylabel('C index')
+plt.show()
 
 # plot bandwidth and Integrated brier score
-h_values = list(IBS_for_bandwidth.keys())
-ibs_values = list(IBS_for_bandwidth.values())
+h_values = list(ibs_for_bandwidth.keys())
+ibs_values = list(ibs_for_bandwidth.values())
 plt.figure()
 plt.plot(h_values, ibs_values, marker='o')
 plt.xlabel('bandwidth')
 plt.ylabel('Integrated brier score')
 plt.show()
 
-# 计算最佳 bandwidth 下的反事实生存函数估计
-h_best, IBS_min = min(IBS_for_bandwidth.items(), key=lambda x: x[1])
+# 计算最佳 bandwidth 下的反事实生存函数估计  # 计算出来用于哪里？
+h_best, IBS_min = min(ibs_for_bandwidth.items(), key=lambda x: x[1])
 weight = np.empty(shape=(0, n_test))
 for a in treatment_grid:
     kernel_values = gaussian_kernel(a_approx, a, h_best)
