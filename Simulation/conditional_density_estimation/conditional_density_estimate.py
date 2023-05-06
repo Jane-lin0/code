@@ -20,6 +20,15 @@ def cde_adjust(cde_list):
     return cde
 
 
+def cde_sample_estimate(cde_estimates, a_approx_index):
+    cde_list = []
+    for x_index, grid_index in enumerate(a_approx_index):
+        cde_val = cde_estimates.iloc[x_index, grid_index]
+        cde_list.append(cde_val)
+    cde = cde_adjust(cde_list)  # 给 cde_list 的零值加上一个很小的值，避免求 pi 时除以 0 得到 inf
+    return cde
+
+
 '''
 估计的条件密度几乎是零值
 '''
@@ -35,11 +44,11 @@ def conditional_density_estimate(df_train,df_validation,df_test, n_grid):
     @return: cde: ndarray:(len(df_test['x']),n_grid)
              a_grid: ndarray:(n_grid,1)
     """
-    model_flexcode = flexcode.FlexCodeModel(NN, max_basis=31, basis_system="cosine",regression_params={"k":10})
+    model_flexcode = flexcode.FlexCodeModel(NN, max_basis=31, basis_system="cosine", regression_params={"k":10})
     # R 中 basis_system 默认是 Fourier
     model_flexcode.fit(df_train['x'].values, df_train['a'].values)
 
-    model_flexcode.tune(df_validation['x'].values,df_validation['a'].values)
+    model_flexcode.tune(df_validation['x'].values, df_validation['a'].values)
     # flexcode_estimate_error = model_flexcode.estimate_error(df_test['x'].values, df_test['a'].values)
     cde, a_grid = model_flexcode.predict(df_test['x'].values, n_grid=n_grid) # 返回 n_grid 个函数点
 

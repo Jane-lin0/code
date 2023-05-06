@@ -326,7 +326,7 @@ class SimulationModel():
         x_temp = self.scaler.fit_transform(X)
         # X[:,-1] = np.dot(X[:, :-1], treatment_weights)
         # treatment_col = self.scaler.fit_transform( np.dot(X_temp, treatment_weights).reshape(-1,1) )
-        treatment_col = np.dot(x_temp, treatment_weights).reshape(-1,1) + np.random.randn(num_samples).reshape(-1,1)
+        treatment_col = np.dot(x_temp, treatment_weights).reshape(-1, 1) + np.random.randn(num_samples).reshape(-1,1)
         # X 对 treatment 的影响是线性的
         treatment_col = np.maximum(treatment_col, 0)
 
@@ -335,22 +335,23 @@ class SimulationModel():
 
         # X_std = self.scaler.fit_transform(X)  # 标准化。消除量纲影响
         X_std = self.scaler.fit_transform(X)
-        BX = self.risk_function(X_std)
+        BX = self.risk_function(X_std).flatten()
 
-        lambda_t = np.exp(BX)  # 指数分布的真实参数
+        lambda_t = np.exp(BX).flatten()  # 指数分布的真实参数
 
         # Building the survival times
         T = self.time_function(BX)
         # C = np.random.normal( loc = self.censored_parameter,scale = 5, size = num_samples )
-        C = np.random.exponential(scale=np.mean(T) + np.std(T), size=num_samples)     # 删失时间服从指数分布
-        C = np.maximum(C, 0)
+        # C = np.random.exponential(scale=np.mean(T) + np.std(T), size=num_samples)     # 删失时间服从指数分布
+        C = np.random.uniform(low=0, high=treatment_col).flatten()
+        # C = np.maximum(C, 0)
         time = np.minimum(T, C)  # 观测时间
         E = 1. * (T == time)
 
         # Building dataset
         self.features = columns
         self.dataset = pd.DataFrame(data=np.c_[X, time, E, lambda_t],
-                                    columns=columns + ['time', 'event','parameter'])
+                                    columns=columns + ['time', 'event', 'parameter'])
 
         # Building the time axis and time buckets
         self.times = np.linspace(0., max(self.dataset['time']), self.bins)

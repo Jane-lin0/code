@@ -6,6 +6,111 @@ from sklearn.model_selection import KFold
 from sksurv.linear_model import CoxPHSurvivalAnalysis
 from sksurv.metrics import concordance_index_censored, integrated_brier_score
 from sksurv.metrics import concordance_index_censored
+import rpy2.robjects as robjects
+import rpy2
+import os
+from sklearn.metrics import mean_squared_error
+from scipy.integrate import dblquad
+from scipy.integrate import nquad
+
+
+# survival_est = np.arange(10).reshape(2, -1)
+# survival_true = np.arange(10).reshape(2, -1)
+# grid = np.arange(5)
+# # grid = np.tile(grid.flatten(), len(survival_est))
+# # survival_est = survival_est.flatten()
+# # survival_true = survival_true.flatten()
+# #
+# # term1 = np.trapz(survival_est**2, grid)
+# # term2 = np.trapz(survival_est * survival_true, grid)
+# # mise = term1 - 2 * term2
+# m = integrated_mean_squared_error(survival_est, survival_true, grid)
+
+# grid = np.arange(5)
+# grid = np.tile(grid.flatten(), 3)
+
+# a = np.arange(5)
+# b = np.tile(a, 3)
+# b = a.item()
+# .reshape(2,-1)
+# b = a.flatten()
+
+# # 定义被积函数
+# def func(x, y):
+#     return np.exp(-x*y)
+#
+# # 定义积分区间
+# x_range = [0, 1]
+# y_range = [lambda x: 0, lambda x: 1 - x]
+#
+# # 计算积分
+# result, error = nquad(func, [x_range, y_range])
+#
+# print("结果:", result)
+# print("误差:", error)
+
+# # 定义被积函数
+# def func(x, y):
+#     return x+y
+#
+# # 定义积分区间和积分区域
+# a, b = 0, 1
+# low_fun = lambda x: 0
+# upper_fun = lambda x: 1 - x
+#
+# # 计算积分
+# result, error = dblquad(func, a, b, low_fun, upper_fun)
+#
+# print("结果:", result)
+# print("误差:", error)
+
+
+# a=np.trapz([1,2,3], x=[4,6,8])
+
+# y_true = [[0.5, 1],[-1, 1],[7, -6]]
+# y_pred = [[0, 2],[-1, 2],[8, -5]]
+# mse = mean_squared_error(y_true, y_pred) # 0.708
+# MSE =((0.5 - 0)**2 + (1 - 2)**2 + (-1 + 1)**2 + (-1 + 2)**2 + (7 - 8)**2 + (-6 + 5)**2)/6  # 0.70833
+
+
+# os.environ['R_HOME'] = 'C:/Program Files/R/R-4.3.0'
+#
+#
+# # rpy2.rinterface.set_R_HOME('/path/to/R')
+#
+# print(rpy2.__version__) # 3.5.11
+# import rpy2.situation as rpy2situation
+# # print(rpy2situation.get_r_version())
+# # import rpy2.situation as sit
+# #
+# # print(sit.get_r_home())
+# # print(sit.get_rversion())
+#
+#
+# # os.environ['R_HOME'] = 'C:/Program Files/R/R-4.3.0'  # 根据实际安装路径进行修改
+# # # 执行一条R语言命令
+# result = robjects.r('paste("Hello", "world!")')
+# print(result[0])
+
+# N = 1000
+# path = f"C:/Users/janline/Desktop/simulation_data/{N}"
+# df_train = pd.read_excel(path+"data.xlsx",sheet_name='train')
+# df_test = pd.read_excel(path+"data.xlsx",sheet_name='test')
+# df = pd.concat([df_train, df_test], axis=0).reset_index(drop=True)
+#
+# a_median = np.median(df_test['a'])
+#
+# T = df['o']
+# treatment_col = df['a']
+# num_samples = len(df)
+# C = np.random.exponential(scale=np.mean(T) + np.std(T), size=num_samples)     # 删失时间服从指数分布
+# C1 = np.random.uniform(low=0, high=treatment_col)
+
+# c = np.array([[4], [5], [1]])
+# b = c.flatten()
+
+# treatment_col = np.random.binomial(10, 0.5, size=100)
+# C = np.random.uniform(low=0, high=treatment_col)
 
 # a = np.logspace(0.01, 1, 10)
 # b = np.logspace(-2, 0, num=10)  # 带宽取值范围在0.01到1之间
@@ -37,6 +142,13 @@ from sksurv.metrics import concordance_index_censored
 # df_train = pd.read_excel(path+"data.xlsx",sheet_name='train')
 # df_test = pd.read_excel(path+"data.xlsx",sheet_name='test')
 # df = pd.concat([df_train, df_test], axis=0).reset_index(drop=True)
+#
+# T = df['o']
+# treatment_col = df['a']
+# num_samples = len(df)
+# C = np.random.exponential(scale=np.mean(T) + np.std(T), size=num_samples)     # 删失时间服从指数分布
+# C1 = np.random.uniform(low=0, high=treatment_col)
+
 #
 # # 检查测试集时间是否超出最大观测时间点
 # extends = df_test['o'] > np.max(df_train['o'])

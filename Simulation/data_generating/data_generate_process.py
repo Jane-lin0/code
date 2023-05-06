@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split, KFold
 from Simulation.data_generating.DGP_pysurvival import SimulationModel
 
 
+
 def time_moderate(df_train, df_test):
     """
     将 df_train 的时间范围调整到在 df_test 之内，即 df_train['o'] 被包含于 df_test['o']，IBS 的计算要求
@@ -77,33 +78,14 @@ def time_moderate(df_train, df_test):
 #     return df_train, df_test
 
 
-sim = SimulationModel( survival_distribution='exponential',
-                       risk_type='linear',
-                       alpha=1,
-                       beta=1
-                       )
-
-cv = 5
-kf = KFold(n_splits=cv, shuffle=True, random_state=123)
-
-
-def data_generate(n, save_path):
-    dataset = sim.generate_data(num_samples=n, num_features=4,
-                                feature_weights=[-2, 1, 2]+[1],
-                                treatment_weights=[1, 0, 0])
-    # lambda = exp(-1 * x + 1 * a) * alpha , a = 2 * x
-    dataset.columns = ['x1', 'x2', 'x3', 'a', 'o', 'e', 'lambda']
-    # dataset.sort_values(by='o',ascending=True,inplace=True)  # 便于后续条件生存函数的估计
-
-    df = dataset
-    # df_train, df_test = train_test_split(df, test_size=0.25, random_state=123)
+def train_validation_split(df, cv):
+    kf = KFold(n_splits=cv, shuffle=True, random_state=123)
     i = 0
     for train_index, test_index in kf.split(df):
         df_train = df.loc[train_index]
         df_test = df.loc[test_index]
 
-        df_train, df_test = time_moderate(df_train, df_test)  # 调整时间，避免计算综合 brier score 时报错
-
+        # df_train, df_test = time_moderate(df_train, df_test)  # 调整时间，避免计算综合 brier score 时报错
         df_train.sort_values(by='o', ascending=True, inplace=True)
         df_test.sort_values(by='o', ascending=True, inplace=True)  # 是否要排序？要排序，排序后样本的顺序和treatment的顺序一致，否则 IBS 的计算有误
 
@@ -113,12 +95,37 @@ def data_generate(n, save_path):
         df_test.to_excel(writer, sheet_name='test', index=False)
         writer.save()
         i += 1
+
+
+sim = SimulationModel( survival_distribution='exponential',
+                       risk_type='linear',
+                       alpha=1,
+                       beta=1
+                       )
+
+
+
+
+def data_generate(n, save_path):
+    dataset = sim.generate_data(num_samples=n, num_features=4,
+                                feature_weights=[-2, 1, 2]+[1],  # beta  gamma
+                                treatment_weights=[4, 2, 1])  # W
+    # lambda = exp(-1 * x + 1 * a) * alpha , a = 2 * x
+    dataset.columns = ['x1', 'x2', 'x3', 'a', 'o', 'e', 'lambda']
+    # dataset.sort_values(by='o',ascending=True,inplace=True)  # 便于后续条件生存函数的估计
+
+    df = dataset
+    df_train, df_test = train_test_split(df, test_size=0.25, random_state=123)
+    df_train, df_test = time_moderate(df_train, df_test)  # 调整时间，避免计算 integrated brier score 时报错
+
     print(f"dataset generated and saved to {save_path}")
 
 
-N = 1000
-path = f"C:/Users/janline/Desktop/simulation_data/{N}"
-data_generate(N, path)
+
+
+# N = 1000
+# path = f"C:/Users/janline/Desktop/simulation_data/{N}"
+# data_generate(N, path)
 
 
 
