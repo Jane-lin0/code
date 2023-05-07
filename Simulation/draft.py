@@ -13,6 +13,8 @@ from sklearn.metrics import mean_squared_error
 from scipy.integrate import dblquad
 from scipy.integrate import nquad
 
+# survival_est = np.arange(12).reshape(3, 4)
+# empty_est = np.zeros(shape=survival_est.shape)
 
 # survival_est = np.arange(10).reshape(2, -1)
 # survival_true = np.arange(10).reshape(2, -1)

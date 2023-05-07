@@ -7,7 +7,7 @@ from Simulation.kernel_density_smoothing.density_estimate import density_estimat
 from Simulation.kernel_setting import gaussian_kernel
 from Simulation.conditional_survival_function.conditional_survival_estimate import conditional_survival_estimate, get_x_y
 from Simulation.conditional_density_estimation.conditional_density_estimate import cde_sample_estimate
-from Simulation.metrics import mean_squared_error, integrated_mean_squared_error, survival_true
+from Simulation.metrics import mean_squared_error_normalization, integrated_mean_squared_error_normalization, survival_true
 
 '''
 data
@@ -27,7 +27,7 @@ df_test = pd.read_excel(path + f"data{i}.xlsx", sheet_name='test')
 df = pd.concat([df_train, df_test], axis=0)
 
 '''
-conditional_density_estimate，A|X 的条件密度估计 p(a|x) 
+conditional_density_estimate，A|X 的条件密度估计 p(a|x)  
 '''
 cde_estimates = pd.read_excel(path + f"CDE{i}.xlsx", sheet_name='Sheet1')  # a_grid 上的 cde
 a_grid = pd.read_excel(path + f"CDE{i}.xlsx", sheet_name='Sheet2')
@@ -83,11 +83,11 @@ a_median = np.median(df_test['a'])
 idx = np.argmin(np.abs(treatment_grid - a_median))   # 长度和 df_test 一致
 survival_estimate_a = counterfactual_survival[idx, :].reshape(1, -1)
 survival_true_a = survival_true(treatment_grid[idx], time_grid, df_test)
-mse = mean_squared_error(survival_estimate_a, survival_true_a, time_grid)
+mse = mean_squared_error_normalization(survival_estimate_a, survival_true_a, time_grid)
 
 # validation set: IMSE 评估生存函数估计
 survival_true_values = survival_true(treatment_grid, time_grid, df_test)
-imse = integrated_mean_squared_error(counterfactual_survival, survival_true_values, time_grid)
+imse = integrated_mean_squared_error_normalization(counterfactual_survival, survival_true_values, time_grid)
 
 # h_best, IBS_min = min(ibs_for_bandwidth.items(), key=lambda x: x[1])
 
