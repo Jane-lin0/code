@@ -70,6 +70,56 @@ def survival_true(treatment_grid, time_grid, df_test):
         true_survival = np.vstack([true_survival, survival_a])  # ndarray:(len(treatment_grid), len(time_grid))
     return true_survival
 
+
+# def subset_index(shape, row_num, col_num):
+#     """
+#     随机抽取row_num行col_num列，返回一个对应索引
+#     """
+#     # 确定随机抽取的行索引和列索引
+#     row_index = np.random.choice(shape[0], row_num, replace=False)
+#     col_index = np.random.choice(shape[1], col_num, replace=False)
+#
+#     # 将行索引和列索引排序
+#     row_index = np.sort(row_index)
+#     col_index = np.sort(col_index)
+#     return row_index, col_index
+
+def equal_space(length, indices_num):
+    # 计算间距
+    indices_step = (length - 1) // (indices_num - 1)
+
+    # 确定等间距的索引
+    indices = np.arange(0, length, indices_step)
+
+    # 确保起始索引和最后一个索引被包含
+    if indices[0] != 0:
+        indices[0] = 0
+    if indices[-1] != length - 1:
+        indices[-1] = length - 1
+    return indices
+
+
+def subset_index(shape, row_num, col_num):
+    """
+    随机抽取row_num行col_num列，返回一个对应索引
+    """
+    # 等间距行索引
+    row_indices = equal_space(length=shape[0], indices_num=row_num)
+
+    # 等间距列索引
+    col_indices = equal_space(length=shape[1], indices_num=col_num)
+
+    return row_indices, col_indices
+
+
+def subset(ndarray, row_index, col_index):
+    """
+    从ndarray中提取抽样出来的行和列，并将其存储在一个新的ndarray中返回
+    """
+    ndarray1 = ndarray[row_index][:, col_index]
+    return ndarray1
+
+
 # def mean_squared_error(survival_est, survival_true, grid):
 #     """
 #     mean_squared_error at treatment a

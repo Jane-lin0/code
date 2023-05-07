@@ -12,6 +12,76 @@ import os
 from sklearn.metrics import mean_squared_error
 from scipy.integrate import dblquad
 from scipy.integrate import nquad
+from tabulate import tabulate
+
+# a = np.arange(0, 10, 3)
+
+# # 创建一个200x500的随机数组
+# data = np.random.rand(20, 50)
+#
+# # 设置表头和表尾
+# header = ['Column {}'.format(i+1) for i in range(data.shape[1])]
+# footer = [''] * data.shape[1]
+#
+# # 将数组转换为包含LaTeX表格的字符串
+# table = tabulate(data, headers=header, showindex=False, tablefmt="latex")
+#
+# # 在字符串中添加sidewaystable环境的开始和结束标记
+# table = '\\begin{sidewaystable}\\centering\n\\resizebox{\\textwidth}{!}{\\begin{tabular}{%s}\n%s\\end{tabular}}\n\\end{sidewaystable}' % ('|' + '|'.join(['c']*data.shape[1]) + '|', table)
+#
+# # 输出LaTeX表格
+# print(table)
+
+
+# # 创建一个200x500的随机数组
+# data = np.random.rand(200, 50)
+#
+# # 设置表头和表尾
+# header = ['Column {}'.format(i+1) for i in range(data.shape[1])]
+# footer = [''] * data.shape[1]
+#
+# # 将数组转换为包含LaTeX表格的字符串
+# table = tabulate(data, headers=header, showindex=False, tablefmt='latex')
+#
+# # 在字符串中添加tabularx的开始和结束标记  # 自动调整但没调整成功
+# table = '\\begin{table}\\centering\\begin{tabularx}{\\textwidth}{%s}\n%s\\end{tabularx}\\end{table}' % ('|' + '|'.join(['X']*data.shape[1]) + '|', table)
+#
+# # 输出LaTeX表格
+# print(table)
+
+
+# # 创建一个200x500的随机数组  带标题
+# data = np.random.rand(20, 50)
+#
+# # 设置表头和表尾
+# header = ['Column {}'.format(i+1) for i in range(data.shape[1])]
+# footer = [''] * data.shape[1]
+#
+# # 将数组转换为包含LaTeX表格的字符串
+# table = tabulate(data, headers=header, showindex=False, tablefmt='latex')
+#
+# # 在字符串中添加longtable的开始和结束标记
+# table = '\\begin{longtable}{%s}\n%s\\end{longtable}' % ('|' + '|'.join(['c']*data.shape[1]) + '|', table)
+
+# 输出LaTeX表格
+# print(table)
+
+
+# # 创建一个200x500的随机数组  # A4 页面显示不出来
+# data = np.random.rand(10, 20)
+
+# 将数组转换为包含LaTeX表格的字符串
+# table = tabulate(np.concatenate((data[-5:, ])), tablefmt="latex")
+#
+# # 输出LaTeX表格
+# print(table)
+
+
+# h = 1000**(-1/5)
+#
+# h3 = 3*h
+#
+# h4 = 4*h
 
 # survival_est = np.arange(12).reshape(3, 4)
 # empty_est = np.zeros(shape=survival_est.shape)
