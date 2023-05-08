@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import os
 from scipy.stats import expon
 from sksurv.metrics import integrated_brier_score, concordance_index_censored
 from matplotlib import pyplot as plt
@@ -8,6 +9,8 @@ from Simulation.kernel_density_smoothing.density_estimate import density_estimat
 from Simulation.kernel_setting import gaussian_kernel
 from Simulation.conditional_survival_function.conditional_survival_estimate import conditional_survival_estimate, get_x_y
 from Simulation.conditional_density_estimation.conditional_density_estimate import cde_adjust
+from Simulation.metrics import mean_squared_error_normalization, integrated_mean_squared_error_normalization
+from Simulation.metrics import survival_true, subset_index, subset, equal_space, get_best_bandwidth
 
 '''
 data
@@ -19,10 +22,13 @@ path = f"C:/Users/janline/Desktop/simulation_data/{N}"
 # h = 0.7  # bandwidth 交叉验证选择
 # ibs_for_bandwidth = dict()
 # cindex_for_bandwidth = dict()
+mse_for_h = []
+imse_for_h = []
+h_list = np.logspace(-2, 0, num=20)   # 0.01 至 1 之间的 20 个数
 # for h in np.logspace(0.01, 1, 10):  # 100 个 h 运行很久
-for h in np.logspace(-2, 0, num=10):
-    ibs_list = []
-    cindex_list = []
+for h in h_list:
+    mse_list = []
+    imse_list = []
     for i in range(cv):  # 循环拟合数据集
         df_train = pd.read_excel(path+f"data{i}.xlsx", sheet_name='train')
         df_test = pd.read_excel(path+f"data{i}.xlsx", sheet_name='test')
@@ -71,8 +77,8 @@ for h in np.logspace(-2, 0, num=10):
         kernel setting, calculate Sa(t)：每个 a_grid 下的生存函数估计
         '''
         # a = 1
-        # treatment_grid = np.linspace(min(a_approx), max(a_approx), num=n_test)  # 连续 treatment 估计取值的网格点，可调整
-        treatment_grid = a_approx
+        treatment_grid = np.linspace(min(a_approx), max(a_approx), num=n_test)  # 连续 treatment 估计取值的网格点，可调整
+        # treatment_grid = a_approx
 
         # 根据权重计算反事实生存函数
         weight = np.empty(shape=(0, n_test))
@@ -87,31 +93,117 @@ for h in np.logspace(-2, 0, num=10):
         # ndarray:(len(treatment_grid), len(time_grid))
 
         # MSE 评估生存函数估计
-
+        a_median = np.median(df_test['a'])
+        idx = np.argmin(np.abs(treatment_grid - a_median))  # 长度和 df_test 一致
+        survival_estimate_a = counterfactual_survival[idx, :].reshape(1, -1)
+        survival_true_a = survival_true(treatment_grid[idx], time_grid, df_test)
+        mse = mean_squared_error_normalization(survival_estimate_a, survival_true_a, time_grid)
+        mse_list.append(mse)
 
         # IMSE 评估生存函数估计
+        survival_true_values = survival_true(treatment_grid, time_grid, df_test)
+        imse = integrated_mean_squared_error_normalization(counterfactual_survival, survival_true_values, time_grid)
+        imse_list.append(imse)
+
+    mse_for_h.append(np.mean(mse_list))
+    imse_for_h.append(np.mean(imse_list))
 
 
-        # integrated_brier_score 评估生存函数估计
-        # x_train, y_train = get_x_y(df_train, col_event='e', col_time='o')
-        # x_test, y_test = get_x_y(df_test, col_event='e', col_time='o')
-        # ibs = integrated_brier_score(y_train, y_test, counterfactual_survival, time_grid)  # 并未用到真实生存函数
-        # ibs_list.append(ibs)
+# plot bandwidth and MSE
+plt.figure()
+plt.plot(h_list, mse_for_h, marker='o')
+plt.xlabel('bandwidth')
+plt.ylabel('Mean squared error')
+plt.show()
 
-        # calculate c_index
-        # t_approx_index = [np.argmin(np.abs(time_grid - df_test['o'][i])) for i in range(n_test)]  # 长度和 df_test 一致
-        # survival_est = []
-        # for x_index, grid_index in enumerate(t_approx_index):
-        #     val = counterfactual_survival[x_index, grid_index]
-        #     survival_est.append(val)
-        # survival_est = np.array(survival_est)
-        # event = (df_test['e'] == 1).values
-        # time = df_test['o'].values
-        # c_index = concordance_index_censored(event, time, estimate=survival_est)
-        # cindex_list.append(c_index)
+# plot bandwidth and IMSE
+plt.figure()
+plt.plot(h_list, imse_for_h, marker='o')
+plt.xlabel('bandwidth')
+plt.ylabel('Integrated mean squared error')
+plt.show()
 
-    # ibs_for_bandwidth[h] = np.mean(ibs_list)
-    # cindex_for_bandwidth[h] = np.mean(cindex_list)
+# 计算最佳 bandwidth 下的反事实生存函数估计  # 计算出来用于 test data
+h_best_for_mse, min_mse = get_best_bandwidth(error_list=mse_for_h, h_list=h_list)
+h_best_for_imse, min_imse = get_best_bandwidth(error_list=imse_for_h, h_list=h_list)
+weight = np.empty(shape=(0, n_test))
+for a in treatment_grid:
+    kernel_values = gaussian_kernel(a_approx, a, h_best_for_mse)
+    w_a = pi * kernel_values  # ndarray:(len(df_test),)
+    w_normalization = w_a / np.sum(w_a)  # 结果相对正常，含非 0 值
+    weight = np.vstack([weight, w_normalization.reshape(1, -1)])
+    # final result: weight = { ndarray:(len(treatment_grid), len(df_test))}
+counterfactual_survival = weight @ conditional_survival_estimated
+
+# true counterfactual survival
+survival_true_values = np.empty(shape=(0, len(time_grid)))
+for a in treatment_grid:
+    lambda_idx = np.argmin(np.abs(df_test['a'] - a))
+    lambda_i = df_test['lambda'][lambda_idx]
+    survival_a = []
+    for t in time_grid:
+        survival_t = 1 - expon.cdf(t, scale=1 / lambda_i)
+        survival_a.append(survival_t)
+    survival_true_values = np.vstack([survival_true_values, survival_a])  # ndarray:(len(treatment_grid), len(time_grid))
+
+
+# median potential survival time
+# treatment = a 时，Sa(t) = P( T(a) >= t ) = 0.5 时对应的 time_grid
+n_treat = len(treatment_grid)
+median_survival = []
+for i in range(n_treat):
+    index = np.argmin(np.abs(counterfactual_survival[i, :] - 0.5))
+    median_survival.append(time_grid[index])
+median_survival = np.array(median_survival)
+
+# 反事实生存函数估计和真实函数图像对比
+# treatment_idx = np.random.randint(low=0, high=len(treatment_grid)-1, size=3)
+treatment_idx = equal_space(length=len(treatment_grid), indices_num=5)
+colors = ['r', 'g', 'b', 'y', 'pink']
+j = 1
+for idx, color in zip(treatment_idx, colors):
+    survival_est = counterfactual_survival[idx, :]
+    plt.step(time_grid, survival_est, where="post", label=f"survival_est_{j}", color=color)
+    survival_t = survival_true_values[idx, :]
+    plt.step(time_grid, survival_t, where="post", label=f"survival_true_{j}", color=color, linestyle='--')
+    j += 1
+plt.legend()
+plt.xlabel('time')
+plt.ylabel('survival probability')
+
+# 将图像保存到本地
+desktop = os.path.expanduser("~/Desktop")
+filename = f"h{int(100 * h)}.png"
+filepath = os.path.join(desktop, filename)
+plt.savefig(filepath)
+plt.show()
+
+
+
+
+
+# integrated_brier_score 评估生存函数估计
+# x_train, y_train = get_x_y(df_train, col_event='e', col_time='o')
+# x_test, y_test = get_x_y(df_test, col_event='e', col_time='o')
+# ibs = integrated_brier_score(y_train, y_test, counterfactual_survival, time_grid)  # 并未用到真实生存函数
+# ibs_list.append(ibs)
+
+# calculate c_index
+# t_approx_index = [np.argmin(np.abs(time_grid - df_test['o'][i])) for i in range(n_test)]  # 长度和 df_test 一致
+# survival_est = []
+# for x_index, grid_index in enumerate(t_approx_index):
+#     val = counterfactual_survival[x_index, grid_index]
+#     survival_est.append(val)
+# survival_est = np.array(survival_est)
+# event = (df_test['e'] == 1).values
+# time = df_test['o'].values
+# c_index = concordance_index_censored(event, time, estimate=survival_est)
+# cindex_list.append(c_index)
+
+# ibs_for_bandwidth[h] = np.mean(ibs_list)
+# cindex_for_bandwidth[h] = np.mean(cindex_list)
+
+# h_best, IBS_min = min(ibs_for_bandwidth.items(), key=lambda x: x[1])
 
 # plot bandwidth and c_index
 # h_values = list(cindex_for_bandwidth.keys())
@@ -131,47 +223,7 @@ for h in np.logspace(-2, 0, num=10):
 # plt.ylabel('Integrated brier score')
 # plt.show()
 
-# 计算最佳 bandwidth 下的反事实生存函数估计  # 计算出来用于哪里？
-h_best, IBS_min = min(ibs_for_bandwidth.items(), key=lambda x: x[1])
-weight = np.empty(shape=(0, n_test))
-for a in treatment_grid:
-    kernel_values = gaussian_kernel(a_approx, a, h_best)
-    w_a = pi * kernel_values  # ndarray:(len(df_test),)
-    w_normalization = w_a / np.sum(w_a)  # 结果相对正常，含非 0 值
-    weight = np.vstack([weight, w_normalization.reshape(1, -1)])
-    # final result: weight = { ndarray:(len(treatment_grid), len(df_test))}
-counterfactual_survival = weight @ conditional_survival_estimated
 
-# true counterfactual survival
-true_survival = np.empty(shape=(0, len(time_grid)))
-for a in treatment_grid:
-    lambda_idx = np.argmin(np.abs(df_test['a'] - a))
-    lambda_i = df_test['lambda'][lambda_idx]
-    survival_a = []
-    for t in time_grid:
-        survival_t = 1 - expon.cdf(t, scale=1 / lambda_i)
-        survival_a.append(survival_t)
-    true_survival = np.vstack([true_survival, survival_a])  # ndarray:(len(treatment_grid), len(time_grid))
-
-# median potential survival time
-# treatment = a 时，Sa(t) = P( T(a) >= t ) = 0.5 时对应的 time_grid
-n_treat = len(treatment_grid)
-median_survival = []
-for i in range(n_treat):
-    index = np.argmin(np.abs(counterfactual_survival[i, :] - 0.5))
-    median_survival.append(time_grid[index])
-median_survival = np.array(median_survival)
-
-# 反事实生存函数估计和真实函数图像对比
-treatment_idx = np.random.randint(low=0, high=len(treatment_grid)-1, size=3)
-colors = ['r', 'g', 'b']
-for idx, color in zip(treatment_idx, colors):
-    survival_est = counterfactual_survival[idx, :]
-    plt.step(time_grid, survival_est, where="post", label=f"survival_est_{idx}", color=color)
-    survival_true = true_survival[idx, :]
-    plt.step(time_grid, survival_true, where="post", label=f"survival_true_{idx}", color=color, linestyle='--')
-plt.legend()
-plt.show()
 
 
 # a = 3.766

@@ -59,6 +59,12 @@ def concordance_index():
 
 
 def survival_true(treatment_grid, time_grid, df_test):
+    """
+    @param treatment_grid:
+    @param time_grid:
+    @param df_test:
+    @return: true counterfactual survival function
+    """
     true_survival = np.empty(shape=(0, len(time_grid)))
     for a in treatment_grid:
         lambda_idx = np.argmin(np.abs(df_test['a'] - a))
@@ -118,6 +124,18 @@ def subset(ndarray, row_index, col_index):
     """
     ndarray1 = ndarray[row_index][:, col_index]
     return ndarray1
+
+def get_best_bandwidth(error_list, h_list):
+    """
+    @param error_list:
+    @param h_list:
+    @return: bandwidth with minimum error
+    """
+    min_error = min(error_list)
+    min_error_idx = error_list.index(min_error)
+    h_best = h_list[min_error_idx]
+    return h_best, min_error
+
 
 
 # def mean_squared_error(survival_est, survival_true, grid):

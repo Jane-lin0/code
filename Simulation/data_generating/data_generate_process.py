@@ -86,8 +86,13 @@ def train_validation_split(df, cv):
         df_test = df.loc[test_index]
 
         # df_train, df_test = time_moderate(df_train, df_test)  # 调整时间，避免计算综合 brier score 时报错
-        df_train.sort_values(by='o', ascending=True, inplace=True)
-        df_test.sort_values(by='o', ascending=True, inplace=True)  # 是否要排序？要排序，排序后样本的顺序和treatment的顺序一致，否则 IBS 的计算有误
+
+        # df_train.sort_values(by='o', ascending=True, inplace=True)
+        # df_test.sort_values(by='o', ascending=True, inplace=True)
+        # # 是否要排序？要排序，排序后样本的顺序和treatment的顺序一致，否则 IBS 的计算有误
+
+        # df_train.sort_values(by='a', ascending=True, inplace=True)
+        # df_test.sort_values(by='a', ascending=True, inplace=True)   # 便于对比输出的反事实结果？
 
         # 将数据存储到本地
         writer = pd.ExcelWriter(save_path + f"data{i}.xlsx", engine='xlsxwriter')
@@ -116,7 +121,7 @@ def data_generate(n, save_path):
 
     df = dataset
     df_train, df_test = train_test_split(df, test_size=0.25, random_state=123)
-    df_train, df_test = time_moderate(df_train, df_test)  # 调整时间，避免计算 integrated brier score 时报错
+    # df_train, df_test = time_moderate(df_train, df_test)  # 调整时间，避免计算 integrated brier score 时报错
 
     print(f"dataset generated and saved to {save_path}")
 

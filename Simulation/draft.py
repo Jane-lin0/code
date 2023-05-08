@@ -13,7 +13,46 @@ from sklearn.metrics import mean_squared_error
 from scipy.integrate import dblquad
 from scipy.integrate import nquad
 from tabulate import tabulate
+import os
 
+
+
+# h_list=[1, 0.75, 0.5, 0.25]
+# h_list1=[1, 0.75, 0.5, 0.25]
+# h_list2=[1, 0.75, 0.5, 0.25]
+# arr = np.array([h_list,h_list1,h_list2])
+
+# h = 0.25
+# # 在这里绘制您的图像
+# plt.plot([1, 2, 3, 4], [1, 4, 9, 16])
+# plt.xlabel('time')
+# plt.ylabel('survival probability')
+#
+# # 将图像保存到本地
+# desktop = os.path.expanduser("~/Desktop")
+# filename = f"h{int(100*h)}.png"
+# filepath = os.path.join(desktop, filename)
+# plt.savefig(filepath)
+
+# summary_median_survival = np.empty(shape=(0, 6))
+# arr = np.arange(6)
+# summary_median_survival = np.vstack((summary_median_survival, arr))
+# arr1 = np.random.randint(1,10,6)
+# summary_median_survival = np.vstack((summary_median_survival, arr1))
+
+# h = 0.25
+# # table_pred = f"table_counterfactual_survival_{int(h * 100)}"
+# arr = np.arange(12).reshape(3, 4)
+# row_index = np.array([0, 2])
+# aa = arr.T[row_index]
+# df = pd.DataFrame(arr, index=['h_opt','mse','imse'])
+# table = tabulate(df, tablefmt="latex", floatfmt=".4f")
+# table_pred = f"\\label{int(h*100)}\n{table}\n"
+# table_pred1 = f"\\label{int(h*100)}\n{table}\n"
+# print(table_pred, "-"*100, table_pred1, "="*100)
+
+# table_out = f"\\begin{{table}}[htbp]\n\\centering\n\\caption{{My table caption}}\n\\label{{table_counterfactual_survival_{int(h * 100)}}}\n{table}\n\\end{{table}}"
+# f"table_out_{h}" == table_out
 # a = np.arange(0, 10, 3)
 
 # # 创建一个200x500的随机数组
