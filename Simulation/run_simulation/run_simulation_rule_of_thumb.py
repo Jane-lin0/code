@@ -2,22 +2,21 @@ import numpy as np
 import pandas as pd
 from sksurv.metrics import integrated_brier_score, concordance_index_censored
 from matplotlib import pyplot as plt
-from tabulate import tabulate
 import os
-
+from tabulate import tabulate
 from Simulation.kernel_density_smoothing.density_estimate import density_estimate
 from Simulation.kernel_setting import gaussian_kernel
 from Simulation.conditional_survival_function.conditional_survival_estimate import conditional_survival_estimate, get_x_y
 from Simulation.conditional_density_estimation.conditional_density_estimate import cde_sample_estimate
 from Simulation.metrics import mean_squared_error_normalization, integrated_mean_squared_error_normalization
-from Simulation.metrics import survival_true, subset_index, subset, equal_space, get_best_bandwidth
+from Simulation.metrics import survival_true, get_best_bandwidth, median_survival_time
+from Simulation.ouput import print_latex, subset_index, subset, equal_space
 
-# np.set_printoptions(precision=4)   #设置结果的小数点为 4 位
 '''
 data
 '''
 N = 1000
-cv = 5
+# cv = 5
 path = f"C:/Users/janline/Desktop/simulation_data/{N}"
 
 # h = 1  # bandwidth 交叉验证选择
@@ -30,7 +29,8 @@ path = f"C:/Users/janline/Desktop/simulation_data/{N}"
 # for i in range(cv):  # 循环拟合数据集
 mse_for_h = []
 imse_for_h = []
-summary_median_survival = np.empty(shape=(0, 200))
+summary_median_survival_pred = np.empty(shape=(0, 200))
+summary_median_survival_true = np.empty(shape=(0, 200))
 h_list = [1, 0.75, 0.5, 0.25]
 for h in h_list:
     i = 0
@@ -103,31 +103,34 @@ for h in h_list:
     imse = integrated_mean_squared_error_normalization(counterfactual_survival, survival_true_values, time_grid)
     imse_for_h.append(imse)
 
-    # 不同治疗下的 median potential survival time
-    # treatment = a 时，Sa(t) = P( T(a) >= t ) = 0.5 时对应的 time_grid
-    n_treat = len(treatment_grid)
-    median_survival = []
-    for i in range(n_treat):
-        index = np.argmin(np.abs(counterfactual_survival[i, :] - 0.5))
-        median_survival.append(time_grid[index])
-    median_survival = np.array(median_survival)
-    summary_median_survival = np.vstack((summary_median_survival, median_survival))
+    # 不同治疗下的 median potential survival time 估计
+    median_survival_pred = median_survival_time(counterfactual_survival, treatment_grid, time_grid)
+    summary_median_survival_pred = np.vstack((summary_median_survival_pred, median_survival_pred))
+
+    # 不同治疗下的 median potential survival time 真实值：Sa(t) = P( T(a) >= t ) = 0.5 时对应的 time_grid
+    median_survival_true = median_survival_time(survival_true_values, treatment_grid, time_grid)
+    summary_median_survival_true = np.vstack((summary_median_survival_true, median_survival_true))
 
     '''
-    # 随机抽取25行10列，输出为 latex 结果
+    # 等间隔抽取20行5列，输出为 latex 结果
     '''
-    row_index, col_index = subset_index(counterfactual_survival.shape, row_num=25, col_num=10)
+    row_index, col_index = subset_index(counterfactual_survival.shape, row_num=20, col_num=5)
 
     counterfactual_survival_output = subset(counterfactual_survival, row_index, col_index)
     survival_true_values_output = subset(survival_true_values, row_index, col_index)
 
-    table_counterfactual_survival = tabulate(counterfactual_survival_output, tablefmt="latex", floatfmt=".4f")
-    table_counterfactual_survival = f"\\label{int(h*100)}\n{table_counterfactual_survival}\n"  # 加 label
+    summary_survival_output = np.hstack((treatment_grid[row_index], counterfactual_survival_output, survival_true_values_output))
+    print_latex(summary_survival_output)
 
-    table_survival_true = tabulate(survival_true_values_output, tablefmt="latex", floatfmt=".4f")   # 输出保留4位小数
-    table_survival_true = f"\\label{int(h*100)}\n{table_survival_true}\n"
+    # print_latex(counterfactual_survival_output)
+    # table_counterfactual_survival = tabulate(counterfactual_survival_output, tablefmt="latex", floatfmt=".4f") # 输出保留4位小数
+    # table_counterfactual_survival = f"\\label{int(h*100)}\n{table_counterfactual_survival}\n"  # 加 label
+    # print(table_counterfactual_survival, "=" * 100)  # 打印结果，复制粘贴到latex
 
-    print(table_counterfactual_survival, "-" * 100, table_survival_true, "=" * 100)  # 打印结果，复制粘贴到latex
+    # print_latex(survival_true_values_output)
+    # table_survival_true = tabulate(survival_true_values_output, tablefmt="latex", floatfmt=".4f")
+    # table_survival_true = f"\\label{int(h*100)}\n{table_survival_true}\n"
+    # print(table_survival_true, "=" * 100)
 
     # 反事实生存函数估计和真实函数图像对比
     # treatment_idx = np.random.randint(low=0, high=len(treatment_grid) - 1, size=5)
@@ -143,7 +146,6 @@ for h in h_list:
     plt.legend()
     plt.xlabel('time')
     plt.ylabel('survival probability')
-
     # 将图像保存到本地
     desktop = os.path.expanduser("~/Desktop")
     filename = f"h{int(100 * h)}.png"
@@ -151,15 +153,21 @@ for h in h_list:
     plt.savefig(filepath)
     plt.show()
 
+
 # （不同治疗下的）中位生存时间在不同bandwidth下的对比
-summary_median_survival_with_treatment = np.vstack((treatment_grid.T, summary_median_survival)).T[row_index]
-table_median_survival = tabulate(summary_median_survival_with_treatment, tablefmt="latex", floatfmt=".4f")
+summary_median_survival_output = np.vstack((treatment_grid.T, summary_median_survival_pred, summary_median_survival_true)).T[row_index]
+# table_median_survival = tabulate(summary_median_survival_output, tablefmt="latex", floatfmt=".4f")
+
+# summary_median_survival_true_output = np.vstack((treatment_grid.T, summary_median_survival_true)).T[row_index]
+# table_median_survival_true = tabulate(summary_median_survival_true_output, tablefmt="latex", floatfmt=".4f")
 
 # mse 和 imse 值在不同bandwidth下的对比
 summary_arr = np.array([h_list, mse_for_h, imse_for_h])
-summary_df = pd.DataFrame(summary_arr, index=['h_opt', 'MSE', 'IMSE'])
-table_error_summary = tabulate(summary_df, tablefmt="latex", floatfmt=".4f")
+summary_mse_and_imse = pd.DataFrame(summary_arr, index=['h_opt', 'MSE', 'IMSE'])
+# table_error_summary = tabulate(summary_output, tablefmt="latex", floatfmt=".4f")
 
+for ndarray in [summary_median_survival_output, summary_mse_and_imse]:
+    print_latex(ndarray)
 
 # h_best, IBS_min = min(ibs_for_bandwidth.items(), key=lambda x: x[1])
 

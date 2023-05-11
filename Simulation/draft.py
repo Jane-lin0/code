@@ -14,13 +14,114 @@ from scipy.integrate import dblquad
 from scipy.integrate import nquad
 from tabulate import tabulate
 import os
+import time
 
 
 
-# h_list=[1, 0.75, 0.5, 0.25]
-# h_list1=[1, 0.75, 0.5, 0.25]
-# h_list2=[1, 0.75, 0.5, 0.25]
-# arr = np.array([h_list,h_list1,h_list2])
+# test_change = np.arange(12).reshape(3, -1)
+# table_test = print_latex(test_change)
+# # if table_test == table_test_change:
+# #     print("True")
+#
+# # def print_latex(matrix_output):
+# #     """
+# #     @param matrix_output: ndarray
+# #     @return: 将 matrix_output 打印成 latex 格式
+# #     """
+# #     table_output = tabulate(matrix_output, tablefmt="latex", floatfmt=".4f")    # 输出保留4位小数
+# #     matrix_name = f"{matrix_output}"  # 有误，需要的是 matrix_output 的变量名，但赋值的是变量 matrix_output，
+# #     new_name = f"table_{matrix_name}"
+# #     exec(f"{new_name} = '{table_output}' ")
+# #     print("=" * 100, f"{new_name}:\n {table_output}", "\n")
+# #     # print("=" * 100,table_output, "\n")       # 打印结果，复制粘贴到latex
+# #     return new_name
+
+# a_test_for_change = np.arange(12).reshape(3, -1)
+# b = a_test_for_change * 2
+#
+# def find_var_name(obj):
+#     """
+#     Find the name of a variable that refers to the given object.
+#     """
+#     for name, val in locals().items():
+#         if val is obj:
+#             return f"{name}"
+#     for name, val in globals().items():
+#         if val is obj:
+#             return f"{name}"
+#
+#
+# val_name = find_var_name(a_test_for_change)
+#
+# print(val_name)  # Output: obj
+
+
+# def find_var_name(obj):
+#     """
+#     Find the name of a variable that refers to the given object.
+#     """
+#     for name, val in locals().items():
+#         if val is obj:
+#             return name
+#     for name, val in globals().items():
+#         if val is obj:
+#             return name
+#     return None
+#
+# a_test_for_change = np.arange(12).reshape(3,-1)
+# val_name = find_var_name(a_test_for_change)
+#
+# print(val_name)
+
+
+# a = np.arange(10).reshape(2,-1)
+# a_name = f" '{a}' "
+
+#
+# # 遍历全局变量字典
+# for name in globals():
+#     # 如果变量与指定变量a相同，则将变量名存储到val_name中
+#     if globals()[name] is a:
+#         val_name = name
+#         break
+
+# 输出变量名和值
+# print(val_name)    # 输出：a
+
+
+# # 将 字符串 "apple" 的变量名从 a 改成 fruit
+# a = "apple"
+# new_name = "fruit"
+# exec(f"{new_name} = '{a}' ", globals())
+
+# a = "apple"
+# for i, c in enumerate(a):
+#     new_name = f"b{i}"
+#     exec(f"{new_name} = '{c}'", globals()) # 将变量添加到全局作用域中
+#     print(f"{new_name}: {c}")
+# print(b0) # 此处访问变量b0，将会输出a
+
+
+# print("=" * 100, "\n")
+# a = 1
+# print(a)
+# print("=" * 100, "\n")
+
+# # h_list = np.array([0.01       0.01098541 0.01206793 0.01325711 0.01456348 0.01599859, 0.01757511 0.01930698 0.02120951 0.02329952 0.02559548 0.02811769, 0.03088844 0.03393222 0.03727594 0.04094915 0.04498433 0.04941713, 0.05428675 0.05963623 0.06551286 0.07196857 0.07906043 0.08685114, 0.09540955 0.10481131 0.11513954 0.12648552 0.13894955 0.1526418, 0.16768329 0.184207   0.20235896 0.22229965 0.24420531 0.26826958, 0.29470517 0.32374575 0.35564803 0.39069399 0.42919343 0.47148664, 0.51794747 0.5689866  0.62505519 0.68664885 0.75431201 0.82864277, 0.91029818 1.        ])
+# h_list = [0.01       0.01098541 0.01206793 0.01325711 0.01456348 0.01599859, 0.01757511 0.01930698 0.02120951 0.02329952 0.02559548 0.02811769, 0.03088844 0.03393222 0.03727594 0.04094915 0.04498433 0.04941713, 0.05428675 0.05963623 0.06551286 0.07196857 0.07906043 0.08685114, 0.09540955 0.10481131 0.11513954 0.12648552 0.13894955 0.1526418, 0.16768329 0.184207   0.20235896 0.22229965 0.24420531 0.26826958, 0.29470517 0.32374575 0.35564803 0.39069399 0.42919343 0.47148664, 0.51794747 0.5689866  0.62505519 0.68664885 0.75431201 0.82864277, 0.91029818 1.        ]
+#
+# num_h = len(h_list)
+
+# start_time = time.time()
+# for i in range(10):
+#     h_list = [1, 0.75, 0.5, 0.25]
+#     h_list1 = [1, 0.75, 0.5, 0.25]
+#     h_list2 = [1, 0.75, 0.5, 0.25]
+#     arr = np.array([h_list, h_list1, h_list2])
+#     end_time = time.time()
+#     run_time = end_time - start_time
+#     print("程序运行时间为：", run_time, "秒")
+
 
 # h = 0.25
 # # 在这里绘制您的图像
@@ -205,11 +306,12 @@ import os
 
 # N = 1000
 # path = f"C:/Users/janline/Desktop/simulation_data/{N}"
-# df_train = pd.read_excel(path+"data.xlsx",sheet_name='train')
-# df_test = pd.read_excel(path+"data.xlsx",sheet_name='test')
-# df = pd.concat([df_train, df_test], axis=0).reset_index(drop=True)
-#
-# a_median = np.median(df_test['a'])
+# df_train = pd.read_excel(path+"data.xlsx", sheet_name='train')
+# df_test = pd.read_excel(path+"data.xlsx", sheet_name='test')
+# # df = pd.concat([df_train, df_test], axis=0).reset_index(drop=True)
+# #
+# # a_median = np.median(df_test['a'])
+# lambda_index = df_test['lambda'][0]
 #
 # T = df['o']
 # treatment_col = df['a']
