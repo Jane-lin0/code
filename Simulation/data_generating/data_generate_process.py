@@ -78,7 +78,7 @@ def time_moderate(df_train, df_test):
 #     return df_train, df_test
 
 
-def train_validation_split(df, cv):
+def train_validation_split(df, cv, save_path):
     kf = KFold(n_splits=cv, shuffle=True, random_state=123)
     i = 0
     for train_index, test_index in kf.split(df):
