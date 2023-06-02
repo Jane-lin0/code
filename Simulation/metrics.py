@@ -53,7 +53,14 @@ def integrated_brier_score():
     return ibs
 
 
-def concordance_index():
+def survival_point_estimate(counterfactual_survival, treatment_point, time_point, treatment_grid, time_grid):
+    treatment_idx = np.argmin(np.abs(treatment_grid - treatment_point))
+    time_idx = np.argmin(np.abs(time_grid - time_point))
+
+    return counterfactual_survival[treatment_idx, time_idx]
+
+
+def c_index() :
 
     return cindex
 
