@@ -1,29 +1,6 @@
 import numpy as np
 import pandas as pd
 
-# all_clinical00 = pd.read_sas(r"C:\Users\janline\OneDrive - stu.xmu.edu.cn\桌面\empirical_data\OAIdata\AllClinical_SAS\allclinical00.sas7bdat")
-# physical_activity_scale = all_clinical00['V00PASE']
-
-# Mean minutes per day spent in physical activity intensity level for each participant having 4 or more valid monitoring days
-# accelerometry06 = pd.read_sas(r"C:\Users\janline\OneDrive - stu.xmu.edu.cn\桌面\empirical_data\OAIdata\Ancillary_SAS\Accelerometry_SAS\accelerometry06.sas7bdat")
-
-# accelerometry08 = pd.read_sas(r"C:\Users\janline\OneDrive - stu.xmu.edu.cn\桌面\empirical_data\OAIdata\Ancillary_SAS\Accelerometry_SAS\accelerometry08.sas7bdat")
-
-# acceldatabyday08 = pd.read_sas(r"C:\Users\janline\OneDrive - stu.xmu.edu.cn\桌面\empirical_data\OAIdata\Ancillary_SAS\Accelerometry_SAS\acceldatabyday08.sas7bdat")
-
-# print(np.sum(physical_activity_scale == physical_activity_scale0))  # 比样本数小
-
-# if allclinical00.equals(all_clinical00):
-#     print("两个DataFrame的值相同")
-# else:
-#     print("不同")
-# print(np.array_equal(allclinical00.values, all_clinical00.values)) # 返回 False，可能数据类型不匹配，例如一个整数存储，另一个是浮点数
-
-# print(allclinical00['V00PASE'].describe())  # 0-531
-
-# allclinical11 = pd.read_sas(r"C:\Users\janline\OneDrive - stu.xmu.edu.cn\桌面\empirical_data\OAIdata\CompleteData_SAS\allclinical11.sas7bdat")
-# 2015年，195个变量，没有V00PASE
-
 allclinical00 = pd.read_sas(r"C:\Users\janline\OneDrive - stu.xmu.edu.cn\桌面\empirical_data\OAIdata\CompleteData_SAS\allclinical00.sas7bdat")
 
 df = pd.DataFrame()
@@ -69,4 +46,40 @@ df['depression'] = allclinical00['V00CESD']
 df['BMI'] = allclinical00['P01BMI']
 
 # df.to_excel("./Empirical/OAIdata/Data_Osteoarthritis_Initiative.xlsx")
+print(allclinical00['P02ELGRISK'].value_counts())   # Knee symptoms, risk factors, or both, status at IEI/SV
 
+# print(allclinical00['P01RATOTCV'].value_counts())   # keen swelling or stiffness score
+
+# 离散型
+# print(allclinical00['P01KSX'].value_counts())
+# print(allclinical00['P01BL12SXL'].value_counts())
+# print(allclinical00['P01BL12SXR'].value_counts())
+
+
+# walk_status = allclinical00['V00400MCMP']
+# # print(allclinical00['V00400MCMP'].value_counts())
+# walk_distance = allclinical00['V00400MTR']
+# walk_time = allclinical00['V00400MTIM']
+
+# all_clinical00 = pd.read_sas(r"C:\Users\janline\OneDrive - stu.xmu.edu.cn\桌面\empirical_data\OAIdata\AllClinical_SAS\allclinical00.sas7bdat")
+# physical_activity_scale = all_clinical00['V00PASE']
+
+# Mean minutes per day spent in physical activity intensity level for each participant having 4 or more valid monitoring days
+# accelerometry06 = pd.read_sas(r"C:\Users\janline\OneDrive - stu.xmu.edu.cn\桌面\empirical_data\OAIdata\Ancillary_SAS\Accelerometry_SAS\accelerometry06.sas7bdat")
+
+# accelerometry08 = pd.read_sas(r"C:\Users\janline\OneDrive - stu.xmu.edu.cn\桌面\empirical_data\OAIdata\Ancillary_SAS\Accelerometry_SAS\accelerometry08.sas7bdat")
+
+# acceldatabyday08 = pd.read_sas(r"C:\Users\janline\OneDrive - stu.xmu.edu.cn\桌面\empirical_data\OAIdata\Ancillary_SAS\Accelerometry_SAS\acceldatabyday08.sas7bdat")
+
+# print(np.sum(physical_activity_scale == physical_activity_scale0))  # 比样本数小
+
+# if allclinical00.equals(all_clinical00):
+#     print("两个DataFrame的值相同")
+# else:
+#     print("不同")
+# print(np.array_equal(allclinical00.values, all_clinical00.values)) # 返回 False，可能数据类型不匹配，例如一个整数存储，另一个是浮点数
+
+# print(allclinical00['V00PASE'].describe())  # 0-531
+
+# allclinical11 = pd.read_sas(r"C:\Users\janline\OneDrive - stu.xmu.edu.cn\桌面\empirical_data\OAIdata\CompleteData_SAS\allclinical11.sas7bdat")
+# 2015年，195个变量，没有V00PASE
