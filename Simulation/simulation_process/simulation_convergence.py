@@ -12,10 +12,31 @@ from Simulation.conditional_density_estimation.conditional_density_estimate impo
 from Simulation.metrics import mean_squared_error_normalization, integrated_mean_squared_error_normalization
 from Simulation.metrics import survival_true, subset_index, subset, equal_space, get_best_bandwidth
 
+class CounterfactualSurvFtn(object):
+    def __init__(self, survival_distribution, sample_num):
+        self.survival_distribution = survival_distribution
+        self.sample_num = sample_num
+
+    def data_generate(self):
+
+    def fit(self):
+
+
+    def tune(self):
+
+
+    def predict(self):
+
+
+    def estimate_error(self):
+
+
+
 '''
 data
 '''
 N = 200
+survival_distribution = 'exponential'
 cv = 5
 path = f"C:/Users/janline/Desktop/simulation_data/{N}"
 
@@ -24,6 +45,10 @@ path = f"C:/Users/janline/Desktop/simulation_data/{N}"
 # cindex_for_bandwidth = dict()
 mse_for_h = []
 imse_for_h = []
+
+'''
+bandwidth choose
+'''
 h_list = np.logspace(-2, 0, num=20)   # 0.01 至 1 之间的 20 个数
 # for h in np.logspace(0.01, 1, 10):  # 100 个 h 运行很久
 for h in h_list:

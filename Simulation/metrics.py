@@ -128,6 +128,6 @@ def get_best_bandwidth(error_list, h_list):
 #     term1 = np.trapz(survival_est**2, grid)
 #     term2 = np.trapz(survival_est * survival_true, grid)
 #     term3 = np.trapz(survival_true**2, grid)
-#     mse1 = (term1 - 2 * term2)/term3 + 1   # 0.16502006915174572  # 误差较大，废弃，用 mse2 算
-#     mse2 = np.trapz((survival_est - survival_true)**2, grid)  # 验证结果是否一致  # 0.03348476226538029
+#     mse1 = (term1 - 2 * term2)/term3 + 1   # 0.16502006915174572   # 误差较大，废弃，用 mse2 算
+#     mse2 = np.trapz((survival_est - survival_true)**2, grid)       # 验证结果是否一致  # 0.03348476226538029
 #     return mse1, mse2

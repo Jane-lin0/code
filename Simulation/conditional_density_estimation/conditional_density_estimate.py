@@ -34,7 +34,7 @@ def cde_sample_estimate(cde_estimates, a_approx_index):
 '''
 
 
-def conditional_density_estimate(df_train,df_validation,df_test, n_grid):
+def conditional_density_estimate(df_train, df_validation, df_test, n_grid):
     """
     A|X 的条件密度估计
     @param df_train: 训练数据，要包含两列：单变量df_train['x'], 连续治疗df_train['a']
@@ -44,7 +44,7 @@ def conditional_density_estimate(df_train,df_validation,df_test, n_grid):
     @return: cde: ndarray:(len(df_test['x']),n_grid)
              a_grid: ndarray:(n_grid,1)
     """
-    model_flexcode = flexcode.FlexCodeModel(NN, max_basis=31, basis_system="cosine", regression_params={"k":10})
+    model_flexcode = flexcode.FlexCodeModel(NN, max_basis=31, basis_system="cosine", regression_params={"k": 10})
     # R 中 basis_system 默认是 Fourier
     model_flexcode.fit(df_train['x'].values, df_train['a'].values)
 
