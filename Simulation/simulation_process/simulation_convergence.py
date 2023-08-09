@@ -2,24 +2,43 @@ import numpy as np
 import pandas as pd
 import os
 from scipy.stats import expon
+from sklearn.model_selection import train_test_split
 from sksurv.metrics import integrated_brier_score, concordance_index_censored
 from matplotlib import pyplot as plt
 
+from Simulation.data_generating.DGP_pysurvival import SimulationModel
 from Simulation.kernel_density_smoothing.density_estimate import density_estimate
 from Simulation.kernel_setting import gaussian_kernel
 from Simulation.conditional_survival_function.conditional_survival_estimate import conditional_survival_estimate, get_x_y
 from Simulation.conditional_density_estimation.conditional_density_estimate import cde_adjust
 from Simulation.metrics import mean_squared_error_normalization, integrated_mean_squared_error_normalization
-from Simulation.metrics import survival_true, subset_index, subset, equal_space, get_best_bandwidth
+from Simulation.metrics import survival_true, get_best_bandwidth
 
 class CounterfactualSurvFtn(object):
-    def __init__(self, survival_distribution, sample_num):
-        self.survival_distribution = survival_distribution
+    def __init__(self, surv_distribution='exponential', sample_num=500):
+        self.surv_distribution = surv_distribution
         self.sample_num = sample_num
+        # self.sample_data = None
+        self.train_data = None
+        self.test_data = None
 
-    def data_generate(self):
+    def data_generate(self, test_size=0.2):
+        sim = SimulationModel(survival_distribution=self.surv_distribution,
+                              risk_type='linear',
+                              alpha=1,
+                              beta=1
+                              )
+        dataset = sim.generate_data(num_samples=self.sample_num, num_features=4,
+                                    feature_weights=[-2, 1, 2] + [1],  # beta  gamma
+                                    treatment_weights=[4, 2, 1])  # W
+        dataset.columns = ['x1', 'x2', 'x3', 'a', 'o', 'e', 'lambda']
+        self.train_data, self.test_data = train_test_split(dataset, test_size=test_size)
+        return self.train_data, self.test_data
+
 
     def fit(self):
+
+
 
 
     def tune(self):
@@ -266,13 +285,3 @@ plt.show()
 #         survival_estimates.append(survival_est)
 #     col += 1
 # survival_estimates = np.array(survival_estimates).reshape(len(time_grid), len(treatment_grid))
-
-
-
-
-
-
-
-
-
-
