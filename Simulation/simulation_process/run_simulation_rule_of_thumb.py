@@ -99,16 +99,18 @@ for h in h_list:
     mse_for_h.append(mse)
 
     # validation set: IMSE 评估生存函数估计
-    survival_true_values = survival_true(treatment_grid, time_grid, df_test)
+    survival_true_values = survival_true(treatment_grid, time_grid, df_test['a'], df_test['lambda'])
     imse = integrated_mean_squared_error_normalization(counterfactual_survival, survival_true_values, time_grid)
     imse_for_h.append(imse)
 
     # 不同治疗下的 median potential survival time 估计
-    median_survival_pred = median_survival_time(counterfactual_survival, treatment_grid, time_grid)
+    median_survival_pred = median_survival_time(counterfactual_survival, time_grid)
+    # median_survival_pred = median_survival_time(counterfactual_survival, treatment_grid, time_grid)
     summary_median_survival_pred = np.vstack((summary_median_survival_pred, median_survival_pred))
 
     # 不同治疗下的 median potential survival time 真实值：Sa(t) = P( T(a) >= t ) = 0.5 时对应的 time_grid
-    median_survival_true = median_survival_time(survival_true_values, treatment_grid, time_grid)
+    median_survival_true = median_survival_time(survival_true_values, time_grid)
+    # median_survival_true = median_survival_time(survival_true_values, treatment_grid, time_grid)
     summary_median_survival_true = np.vstack((summary_median_survival_true, median_survival_true))
 
     '''

@@ -1,5 +1,47 @@
+# import numpy as np
+#
+# bandwidth_list = np.logspace(-4, 1, num=20)
 
+# import pandas as pd
+# from sklearn.model_selection import KFold
+#
+# from Simulation.data_generating.data_generate_process import train_validation_split
+#
+# N = 200
+# cv = 5
+# path = f"C:/Users/janline/OneDrive - stu.xmu.edu.cn/学校/论文/论文代码/simulation_data/{N}"
+# df = pd.read_excel(path+'data.xlsx', sheet_name='train')
+# # train_validation_split(df=df_train, cv=cv, save_path=path)  # split to validation and test set
+# kf = KFold(n_splits=cv, shuffle=True)  # 随机分割数据，不设置 random_state，避免重复
+# i = 0
+# for train_index, validation_index in kf.split(df):
+#     df_train = df.loc[train_index]
+#     df_validation = df.loc[validation_index]
+#
+#     # df_train, df_test = time_moderate(df_train, df_test)  # 调整时间，避免计算综合 brier score 时报错
+#
+#     df_train.sort_values(by='o', ascending=True, inplace=True)
+#     df_validation.sort_values(by='o', ascending=True, inplace=True)
+#     # # 是否要排序？要排序，一是便于后续条件生存函数的估计,二是排序后样本的顺序和treatment的顺序一致，否则 IBS 的计算有误
+#
+#     # df_train.sort_values(by='a', ascending=True, inplace=True)
+#     # df_test.sort_values(by='a', ascending=True, inplace=True)   # 便于对比输出的反事实结果？不需要对比
+#
+#     # 将数据存储到本地
+#     writer = pd.ExcelWriter(path + f"data{i}.xlsx", engine='xlsxwriter')
+#     df_train.to_excel(writer, sheet_name='train', index=False)
+#     df_validation.to_excel(writer, sheet_name='validation', index=False)
+#     # writer.save()
+#     writer.close()
+#     i += 1
 
+# import numpy as np
+# from Simulation.ouput import subset_index
+#
+# mat_test = np.arange(60).reshape(10, 6)
+# time_test = np.arange(20)
+# row_index, col_index = subset_index(mat_test.shape, row_num=5, col_num=mat_test.shape[1])
+# out_test = time_test[row_index]
 
 # # main.py
 # import draft1

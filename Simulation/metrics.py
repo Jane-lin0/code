@@ -2,6 +2,14 @@ import numpy as np
 from scipy.stats import expon
 
 
+def restricted_mean_squared_error(survival_est, survival_true, grid):
+    grid = grid.flatten()
+    survival_est = survival_est.flatten()
+    survival_true = survival_true.flatten()
+    rmse = np.trapz(survival_est - survival_true, grid)
+    return rmse
+
+
 def mean_squared_error(survival_est, survival_true, grid):
     """
     mean_squared_error at treatment a
@@ -48,11 +56,6 @@ def integrated_mean_squared_error_normalization(survival_est, survival_true, gri
     return imse / normalization_term
 
 
-def integrated_brier_score():
-
-    return ibs
-
-
 def survival_point_estimate(counterfactual_survival, treatment_point, time_point, treatment_grid, time_grid):
     treatment_idx = np.argmin(np.abs(treatment_grid - treatment_point))
     time_idx = np.argmin(np.abs(time_grid - time_point))
@@ -60,12 +63,7 @@ def survival_point_estimate(counterfactual_survival, treatment_point, time_point
     return counterfactual_survival[treatment_idx, time_idx]
 
 
-def c_index() :
-
-    return cindex
-
-
-def survival_true(treatment_grid, time_grid, treatment_testSet, lambda_testSet):
+def survival_true(survival_distribution, treatment_grid, time_grid, treatment_testSet, lambda_testSet):
     """
     @param treatment_grid:
     @param time_grid:
@@ -73,33 +71,47 @@ def survival_true(treatment_grid, time_grid, treatment_testSet, lambda_testSet):
     @param lambda_testSet: the parameter of exponential distribution in test set
     @return: true counterfactual survival function
     """
-    true_survival = np.empty(shape=(0, len(time_grid)))
-    for a in treatment_grid:
-        lambda_idx = np.argmin(np.abs(treatment_testSet - a))
-        lambda_i = lambda_testSet[lambda_idx]
-        survival_a = []
-        for t in time_grid:
-            survival_t = 1 - expon.cdf(t, scale=1 / lambda_i)
-            survival_a.append(survival_t)
-        true_survival = np.vstack([true_survival, survival_a])  # ndarray:(len(treatment_grid), len(time_grid))
+    if survival_distribution == 'exponential':
+        true_survival = np.empty(shape=(0, len(time_grid)))
+        for a in treatment_grid:
+            lambda_idx = np.argmin(np.abs(treatment_testSet - a))
+            lambda_i = lambda_testSet[lambda_idx]
+            survival_a = []
+            for t in time_grid:
+                survival_t = 1 - expon.cdf(t, scale=1 / lambda_i)   # exponential
+                survival_a.append(survival_t)
+            true_survival = np.vstack([true_survival, survival_a])  # ndarray:(len(treatment_grid), len(time_grid))
+    else:
+        true_survival = None
     return true_survival
 
 
-def median_survival_time(survival_matrix, treatment_grid, time_grid):
+def median_survival_time(survival_matrix, time_grid):
     """
     @param survival_matrix: ndarray: (len(treatment_grid), len(time_grid))，基于 treatment_grid 和 time_grid 上的生存概率
-    @param treatment_grid:
+    # @param treatment_grid:
     @param time_grid:
     @return: treatment_grid 对应的中位生存时间
     treatment = a 时，Sa(t) = P( T(a) >= time_grid ) = 0.5 时对应的 time_grid
     """
-    n_treat = len(treatment_grid)
+    # n_treat = len(treatment_grid)
+    n_treat = survival_matrix.shape[0]
     median_survival = []
     for i in range(n_treat):
         index = np.argmin(np.abs(survival_matrix[i, :] - 0.5))
         median_survival.append(time_grid[index])
     median_survival = np.array(median_survival)
     return median_survival
+
+
+def integrated_brier_score():
+
+    return ibs
+
+
+def c_index() :
+
+    return cindex
 
 
 def get_best_bandwidth(error_list, h_list):

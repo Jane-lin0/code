@@ -22,7 +22,7 @@ def run_flexcode_validation():
 
     for (i in 0:4) {
       df <- read_excel(paste0(path, "data", i, ".xlsx"), sheet = "train")
-      df_test <- read_excel(paste0(path, "data", i, ".xlsx"), sheet = "test")
+      df_test <- read_excel(paste0(path, "data", i, ".xlsx"), sheet = "validation")
 
       set.seed(1)
       sample <- sample(c(TRUE, FALSE), nrow(df), replace=TRUE, prob=c(0.8,0.2))
@@ -66,7 +66,7 @@ def run_flexcode_validation():
     """
     # 执行R代码
     robjects.r(r_code)
-    print("CDE calculation completed")
+    print("CDE calculation for validation completed")
 
 
 def run_flexcode_test(sample_num):
@@ -119,9 +119,9 @@ def run_flexcode_test(sample_num):
     """
     # 执行R代码
     robjects.r(r_code)
-    print("CDE calculation completed")
+    print("CDE calculation for test completed")
 
-#
+
 # if __name__ == "__main__":
 #     run_flexcode_validation()
 

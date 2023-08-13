@@ -42,7 +42,7 @@ def time_moderate(df_train, df_test):
 
 
 def train_validation_split(df, cv, save_path):
-    kf = KFold(n_splits=cv, shuffle=True)  # 不设置 random_state，避免重复
+    kf = KFold(n_splits=cv, shuffle=True)  # 随机分割数据，不设置 random_state，避免重复
     i = 0
     for train_index, validation_index in kf.split(df):
         df_train = df.loc[train_index]
@@ -74,9 +74,11 @@ def train_test_data_split(dataset, test_size, save_path):
     @return: the train data to be split for validation and test set
     """
     df_train, df_test = train_test_split(dataset, test_size=test_size)  # train test split，不设置 random_state，避免重复
-    df_train.to_excel(save_path + "data.xlsx", sheet_name='train', index=False)
-    df_test.to_excel(save_path + "data.xlsx", sheet_name='test', index=False)
-    return df_train
+    writer = pd.ExcelWriter(save_path + "data.xlsx", engine='xlsxwriter')
+    df_train.to_excel(writer, sheet_name='train', index=False)
+    df_test.to_excel(writer, sheet_name='test', index=False)
+    writer.close()
+    # return df_train
 
 
 # N = 1000
