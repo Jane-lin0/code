@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 from random import sample
 from sklearn.model_selection import train_test_split, KFold
-from Simulation.data_generating.DGP_pysurvival import SimulationModel
 
 
 def time_moderate(df_train, df_test):
@@ -43,50 +42,41 @@ def time_moderate(df_train, df_test):
 
 
 def train_validation_split(df, cv, save_path):
-    kf = KFold(n_splits=cv, shuffle=True, random_state=123)
+    kf = KFold(n_splits=cv, shuffle=True)  # 不设置 random_state，避免重复
     i = 0
-    for train_index, test_index in kf.split(df):
+    for train_index, validation_index in kf.split(df):
         df_train = df.loc[train_index]
-        df_test = df.loc[test_index]
+        df_validation = df.loc[validation_index]
 
         # df_train, df_test = time_moderate(df_train, df_test)  # 调整时间，避免计算综合 brier score 时报错
 
-        # df_train.sort_values(by='o', ascending=True, inplace=True)
-        # df_test.sort_values(by='o', ascending=True, inplace=True)
-        # # 是否要排序？要排序，排序后样本的顺序和treatment的顺序一致，否则 IBS 的计算有误
+        df_train.sort_values(by='o', ascending=True, inplace=True)
+        df_validation.sort_values(by='o', ascending=True, inplace=True)
+        # # 是否要排序？要排序，一是便于后续条件生存函数的估计,二是排序后样本的顺序和treatment的顺序一致，否则 IBS 的计算有误
 
         # df_train.sort_values(by='a', ascending=True, inplace=True)
-        # df_test.sort_values(by='a', ascending=True, inplace=True)   # 便于对比输出的反事实结果？
+        # df_test.sort_values(by='a', ascending=True, inplace=True)   # 便于对比输出的反事实结果？不需要对比
 
         # 将数据存储到本地
         writer = pd.ExcelWriter(save_path + f"data{i}.xlsx", engine='xlsxwriter')
         df_train.to_excel(writer, sheet_name='train', index=False)
-        df_test.to_excel(writer, sheet_name='test', index=False)
-        writer.save()
+        df_validation.to_excel(writer, sheet_name='validation', index=False)
+        # writer.save()
+        writer.close()
         i += 1
 
 
-sim = SimulationModel(survival_distribution='exponential',
-                       risk_type='linear',
-                       alpha=1,
-                       beta=1
-                       )
-
-
-def data_generate(n, save_path):
-    dataset = sim.generate_data(num_samples=n, num_features=4,
-                                feature_weights=[-2, 1, 2]+[1],  # beta  gamma
-                                treatment_weights=[4, 2, 1])  # W
-    # lambda = exp(-1 * x + 1 * a) * alpha , a = 2 * x
-    dataset.columns = ['x1', 'x2', 'x3', 'a', 'o', 'e', 'lambda']
-    # dataset.sort_values(by='o',ascending=True,inplace=True)  # 便于后续条件生存函数的估计
-
-    return dataset
-
-    # df = dataset
-    # df_train, df_test = train_test_split(df, test_size=0.25, random_state=123)
-    # df_train, df_test = time_moderate(df_train, df_test)  # 调整时间，避免计算 integrated brier score 时报错
-    # print(f"dataset generated and saved to {save_path}")
+def train_test_data_split(dataset, test_size, save_path):
+    """
+    @param dataset: the full dataset, including train, validation and test part
+    @param test_size:
+    @param save_path: the save path of test data
+    @return: the train data to be split for validation and test set
+    """
+    df_train, df_test = train_test_split(dataset, test_size=test_size)  # train test split，不设置 random_state，避免重复
+    df_train.to_excel(save_path + "data.xlsx", sheet_name='train', index=False)
+    df_test.to_excel(save_path + "data.xlsx", sheet_name='test', index=False)
+    return df_train
 
 
 # N = 1000
@@ -98,7 +88,7 @@ def data_generate(n, save_path):
 # df = data_generate(N=n)
 # df_train, df_test = train_test_split(df, test_size=0.25, random_state=123)
 # df_train.sort_values(by='o', ascending=True, inplace=True)
-# df_test.sort_values(by='o', ascending=True, inplace=True)  # 是否要排序？
+# df_test.sort_values(by='o', ascending=True, inplace=True)  # 排序便于后面估计的对应
 # # print(df_train.describe())
 # # print(df_test.describe())
 #

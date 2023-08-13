@@ -12,11 +12,9 @@ def get_x_y(dataset, col_event, col_time):
     y = np.empty(dtype=[(col_event, bool), (col_time, np.float64)], shape=dataset.shape[0])
     y[col_event] = (dataset[col_event] == 1).values
     y[col_time] = dataset[col_time].values
-    x = dataset.drop([col_event, col_time], axis=1)
+    # x = dataset.drop([col_event, col_time], axis=1)
+    x = dataset.drop([col_event, col_time, 'lambda'], axis=1)  # 除了event和time列，还应该去除lambda参数列，剩余是X
     return x, y
-
-
-estimator = CoxPHSurvivalAnalysis()
 
 
 def conditional_survival_estimate(df_train, df_test, time_grid):
@@ -29,6 +27,8 @@ def conditional_survival_estimate(df_train, df_test, time_grid):
     """
     x_train, y_train = get_x_y(df_train, col_event='e', col_time='o')
     x_test, y_test = get_x_y(df_test, col_event='e', col_time='o')
+
+    estimator = CoxPHSurvivalAnalysis()
     estimator.fit(x_train, y_train)
 
     pred_survival = estimator.predict_survival_function(x_test)  # test set 中每个样本点的生存函数估计

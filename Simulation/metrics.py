@@ -65,17 +65,18 @@ def c_index() :
     return cindex
 
 
-def survival_true(treatment_grid, time_grid, df_test):
+def survival_true(treatment_grid, time_grid, treatment_testSet, lambda_testSet):
     """
     @param treatment_grid:
     @param time_grid:
-    @param df_test:
+    @param treatment_testSet: the treatment in test set
+    @param lambda_testSet: the parameter of exponential distribution in test set
     @return: true counterfactual survival function
     """
     true_survival = np.empty(shape=(0, len(time_grid)))
     for a in treatment_grid:
-        lambda_idx = np.argmin(np.abs(df_test['a'] - a))
-        lambda_i = df_test['lambda'][lambda_idx]
+        lambda_idx = np.argmin(np.abs(treatment_testSet - a))
+        lambda_i = lambda_testSet[lambda_idx]
         survival_a = []
         for t in time_grid:
             survival_t = 1 - expon.cdf(t, scale=1 / lambda_i)
@@ -110,8 +111,7 @@ def get_best_bandwidth(error_list, h_list):
     min_error = min(error_list)
     min_error_idx = error_list.index(min_error)
     h_best = h_list[min_error_idx]
-    return h_best, min_error
-
+    return h_best
 
 
 # def mean_squared_error(survival_est, survival_true, grid):

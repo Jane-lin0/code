@@ -4,27 +4,35 @@ import os
 from scipy.stats import expon
 from sksurv.metrics import integrated_brier_score, concordance_index_censored
 from matplotlib import pyplot as plt
-
+from Simulation.data_generating.data_generate_process import data_generate
 from Simulation.kernel_density_smoothing.density_estimate import density_estimate
 from Simulation.kernel_setting import gaussian_kernel
 from Simulation.conditional_survival_function.conditional_survival_estimate import conditional_survival_estimate, get_x_y
+from Simulation.conditional_density_estimation.Flexcode_rpy2 import run_flexcode_exterior
 from Simulation.conditional_density_estimation.conditional_density_estimate import cde_adjust
 from Simulation.metrics import mean_squared_error_normalization, integrated_mean_squared_error_normalization
-from Simulation.metrics import survival_true, subset_index, subset, equal_space, get_best_bandwidth
+from Simulation.metrics import survival_true, get_best_bandwidth
+from Simulation.ouput import equal_space, subset_index, subset
 
 '''
 data
 '''
 N = 200
 cv = 5
-path = f"C:/Users/janline/Desktop/simulation_data/{N}"
+path = f"C:/Users/janline/OneDrive - stu.xmu.edu.cn/学校/论文/论文代码/simulation_data/{N}"
+# data_generate(sample_num=N, cv=cv, save_path=path)  # data generate
+# run_flexcode_exterior()  # 调用 flexcode 计算 conditional density
 
 # h = 0.7  # bandwidth 交叉验证选择
 # ibs_for_bandwidth = dict()
 # cindex_for_bandwidth = dict()
 mse_for_h = []
 imse_for_h = []
-h_list = np.logspace(-2, 0, num=20)   # 0.01 至 1 之间的 20 个数
+#
+# '''
+# bandwidth choose
+# '''
+h_list = np.logspace(-2, 0, num=10)   # 0.01 至 1 之间的 20 个数
 # for h in np.logspace(0.01, 1, 10):  # 100 个 h 运行很久
 for h in h_list:
     mse_list = []
