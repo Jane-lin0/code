@@ -6,7 +6,8 @@ def restricted_mean_squared_error(survival_est, survival_true, grid):
     grid = grid.flatten()
     survival_est = survival_est.flatten()
     survival_true = survival_true.flatten()
-    rmse = np.trapz(survival_est - survival_true, grid)
+    rmse = (np.trapz(survival_est - survival_true, grid))**2
+    # rmse = np.trapz(survival_est - survival_true, grid)
     return rmse
 
 
@@ -29,6 +30,12 @@ def mean_squared_error_normalization(survival_est, survival_true, grid):
     normalization_term = np.trapz(survival_true**2, grid).item()
     mse = mean_squared_error(survival_est, survival_true, grid)
     return mse / normalization_term
+
+
+'''
+优化：真实生存函数用以下方式积分
+integrate.quad(f, 0, 1)
+'''
 
 
 def integrated_mean_squared_error(survival_est, survival_true, grid):

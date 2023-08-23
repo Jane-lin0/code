@@ -14,7 +14,7 @@ cv = 5
 path = f"C:/Users/janline/OneDrive - stu.xmu.edu.cn/学校/论文/论文代码/simulation_data/{N}"
 test_size = 0.15
 # bandwidth_list = np.logspace(-2, 0, num=15)  # 0.001 至 1 之间的 10 个数
-bandwidth_list = np.logspace(-4, 1, num=20)
+bandwidth_list = np.logspace(-4, 1, num=5)
 validation_evaluation_method = 'rmse'
 '''========== ========== ========== ========== ========== '''
 
@@ -32,10 +32,12 @@ best_bandwidth = model.fit(bandwidth_list=bandwidth_list, evaluation_method=vali
 
 # 模型估计
 run_flexcode_test(sample_num=N)  # 调用 flexcode 计算 conditional density
+# run_flexcode_test(sample_num=N)  # 调用 flexcode 计算 conditional density
 cde_estimates = pd.read_excel(path+"CDE.xlsx", sheet_name='Sheet1')
 a_grid = pd.read_excel(path+"CDE.xlsx", sheet_name='Sheet2')
 
 counterfactual_survival_pred = model.predict(df_train, df_test, cde_estimates, a_grid, best_bandwidth)
+# counterfactual_survival_pred = model.predict(df_train, df_test, cde_estimates, a_grid)
 print("counterfactual survival calculation completed")
 
 # 误差评估

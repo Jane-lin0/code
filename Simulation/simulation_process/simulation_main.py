@@ -24,8 +24,9 @@ class CounterfactualSurvFtn():
         self.treatment_num = 5
         self.time_grid = None    # 估计结果中的 time 取值网格点
         self.treatment_grid = None  # 估计结果中的 treatment 取值网格点
-        self.bandwidth = None
-        # self.error_for_bandwidth_list = None  # 画 bandwidth 选择的图
+        # self.bandwidth = None     # 单独传入，便于经验法则计算
+        self.error_for_bandwidth_list = None  # 画 bandwidth 选择的图
+        self.treatment_quantile = []
 
     def data_generate(self, sample_num, survival_distribution, test_size):
         """
@@ -45,10 +46,27 @@ class CounterfactualSurvFtn():
                                     treatment_weights=[4, 2, 1])  # W
         # lambda = exp(-1 * x + 1 * a) * alpha , a = 2 * x
         dataset.columns = ['x1', 'x2', 'x3', 'a', 'o', 'e', 'lambda']
+        self.treatment_quantile = np.percentile(dataset['a'], [0, 25, 50, 75, 100])  # 后续对估计进行评估
         train_test_data_split(dataset, test_size=test_size, save_path=self.data_path)
         # train test split，不设置 random_state，避免重复
         df_train = pd.read_excel(self.data_path+'data.xlsx', sheet_name='train')
         train_validation_split(df=df_train, cv=self.cv, save_path=self.data_path)  # split to validation and test set
+        print(f"dataset generated and saved to {self.data_path}")
+
+    def data_generate_empirical(self, sample_num, survival_distribution, test_size):
+        self.survival_distribution = survival_distribution
+        sim = SimulationModel(survival_distribution=self.survival_distribution,
+                              risk_type='linear',
+                              alpha=1,
+                              beta=1
+                              )
+        dataset = sim.generate_data(num_samples=sample_num, num_features=4,
+                                    feature_weights=[-2, 1, 2] + [1],  # beta  gamma
+                                    treatment_weights=[4, 2, 1])  # W
+        # lambda = exp(-1 * x + 1 * a) * alpha , a = 2 * x
+        dataset.columns = ['x1', 'x2', 'x3', 'a', 'o', 'e', 'lambda']
+        train_test_data_split(dataset, test_size=test_size, save_path=self.data_path)  # 只需要 train test data
+        # train test split，不设置 random_state，避免重复
         print(f"dataset generated and saved to {self.data_path}")
 
     def fit(self, bandwidth_list, evaluation_method, visualization):
@@ -74,7 +92,7 @@ class CounterfactualSurvFtn():
                     error = np.mean(error)
                 error_for_h.append(error)
             error_for_bandwidth_list.append(np.mean(error_for_h))
-        # self.error_for_bandwidth_list = error_for_bandwidth_list
+        self.error_for_bandwidth_list = error_for_bandwidth_list
         # self.bandwidth = get_best_bandwidth(error_list=error_for_bandwidth_list, h_list=bandwidth_list)
         best_bandwidth = get_best_bandwidth(error_list=error_for_bandwidth_list, h_list=bandwidth_list)
         print(f"best bandwidth is {best_bandwidth}")
@@ -82,13 +100,14 @@ class CounterfactualSurvFtn():
             self.visualization(bandwidth_list, error_for_bandwidth_list, evaluation_method)
         return best_bandwidth
 
-    def predict(self, df_train, df_validation, cde_estimates, a_grid, best_bandwidth):
+    # def predict(self, df_train, df_validation, cde_estimates, a_grid, best_bandwidth):
+    def predict(self, df_train, df_validation, cde_estimates, a_grid, bandwidth):
         """
         @param df_train:
         @param df_validation:
         @param cde_estimates:
         @param a_grid:
-        @param best_bandwidth: bandwidth
+        @param bandwidth: bandwidth
         @return:
         """
         # df = pd.concat([df_train, df_validation], axis=0)
@@ -119,6 +138,7 @@ class CounterfactualSurvFtn():
         '''
         # time_grid = np.linspace(start=min(df_test['o']), stop=max(df_test['o']), num=500)  # time_grid 设置可调整
         # time_grid = df_test['o']
+        # self.time_grid = np.linspace(start=0, stop=max(df_train['o']), num=500)
         self.time_grid = np.linspace(start=min(df_train['o']), stop=max(df_train['o']), num=500)
         conditional_survival_estimated = conditional_survival_estimate(df_train, df_validation, self.time_grid)  # 未调参
         # ndarray:(len(df_test), len(time_grid))
@@ -126,14 +146,15 @@ class CounterfactualSurvFtn():
         kernel setting, calculate Sa(t)：每个 a_grid 下的生存函数估计
         '''
         # a = 1
-        self.treatment_grid = np.linspace(min(a_approx), max(a_approx), num=n_validation)  # 连续 treatment 估计取值的网格点，可调整
+        self.treatment_grid = np.linspace(0, max(a_approx), num=n_validation)  # 连续 treatment 估计取值的网格点，可调整
+        # self.treatment_grid = np.linspace(min(a_approx), max(a_approx), num=n_validation)  # 连续 treatment 估计取值的网格点，可调整
         # treatment_grid = a_approx
 
         # 根据权重计算反事实生存函数
         weight = np.empty(shape=(0, n_validation))
         for a in self.treatment_grid:
             # kernel_values = gaussian_kernel(a_approx, a, self.bandwidth)
-            kernel_values = gaussian_kernel(a_approx, a, best_bandwidth)
+            kernel_values = gaussian_kernel(a_approx, a, bandwidth)
             w_a = pi * kernel_values  # ndarray:(len(df_test),)
             w_normalization = w_a / np.sum(w_a)  # 结果相对正常，含非 0 值
             weight = np.vstack([weight, w_normalization.reshape(1, -1)])
@@ -162,8 +183,8 @@ class CounterfactualSurvFtn():
         if survival_pred_subset.shape[0] != self.treatment_num or survival_true_subset.shape[0] != self.treatment_num:
             survival_pred_subset = survival_pred_subset.reshape(self.treatment_num, -1)
             survival_true_subset = survival_true_subset.reshape(self.treatment_num, -1)
-        else:
-            pass
+        # else:
+        #     pass
 
         if method == 'imse':
             imse = integrated_mean_squared_error_normalization(survival_pred, survival_true_values, self.time_grid)
@@ -202,7 +223,7 @@ class CounterfactualSurvFtn():
         plt.figure()
         plt.plot(bandwidth_list, error_for_bandwidth_list, marker='o')
         plt.xlabel('bandwidth')
-        plt.ylabel(f"{evaluation_method}")
+        plt.ylabel(f"{evaluation_method.upper()}")
         plt.show()
 
 

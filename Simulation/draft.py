@@ -1,3 +1,24 @@
+import random
+
+
+
+
+
+
+
+# import numpy as np
+# from matplotlib import pyplot as plt
+#
+# evaluation_method = 'rmse'
+#
+# bandwidth_list = np.logspace(-4, 1, num=20)
+# error_for_bandwidth_list = np.array([random.randint(1, 10) for i in range(20)])
+# plt.plot(bandwidth_list, error_for_bandwidth_list, marker='o')
+# plt.xlabel('bandwidth')
+# plt.ylabel(f"{evaluation_method.upper()}")
+# plt.show()
+
+
 # import numpy as np
 #
 # bandwidth_list = np.logspace(-4, 1, num=20)

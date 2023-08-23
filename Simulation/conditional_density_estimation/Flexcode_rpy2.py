@@ -68,6 +68,8 @@ def run_flexcode_validation():
     robjects.r(r_code)
     print("CDE calculation for validation completed")
 
+#     path <- {path}
+
 
 def run_flexcode_test(sample_num):
     """
@@ -120,6 +122,56 @@ def run_flexcode_test(sample_num):
     # 执行R代码
     robjects.r(r_code)
     print("CDE calculation for test completed")
+
+
+def run_flexcode_empirical(sample_num):
+    # 定义R代码字符串
+    r_code = f"""
+    library(readxl)
+    library(FlexCoDE)
+    library(writexl)
+
+    N <- {sample_num}
+    path <- paste0("C:/Users/janline/OneDrive - stu.xmu.edu.cn/学校/论文/论文代码/simulation_data/simulation_empirical/",N)
+
+    df <- read_excel(paste0(path, "data.xlsx"), sheet = "train")
+    df_test <- read_excel(paste0(path, "data.xlsx"), sheet = "test")
+
+    set.seed(1)
+    sample <- sample(c(TRUE, FALSE), nrow(df), replace=TRUE, prob=c(0.8,0.2))
+
+    data_train  <- df[sample, ]
+    ntrain = nrow(data_train)
+    xtrain = data_train[1:ntrain,1:3]
+    ztrain = data_train[1:ntrain,4]
+
+    data_validation   <- df[!sample, ]
+    nvalidation = nrow(data_validation)
+    xvalidation = data_validation[1:nvalidation,1:3]
+    zvalidation = data_validation[1:nvalidation,4]
+
+    data_test <- df_test
+    ntest = nrow(data_test)
+    xtest = data_test[1:ntest,1:3]
+    ztest = data_test[1:ntest,4]
+
+    # conditional density estimation caculation
+    fit = fitFlexCoDE(xtrain,ztrain,xvalidation,zvalidation,xtest,ztest,
+                    nIMax = 10,
+                    regressionFunction = regressionFunction.NW,
+                    n_grid = 1000)
+    predictedValues = predict(fit,xtest,B=1000)  # B的大小决定cde的稀疏
+    cde = as.data.frame(predictedValues$CDE)
+    grid = as.data.frame(predictedValues$z)
+    names(grid) = c('a')
+
+    output_list = list(cde,grid)
+    write_xlsx(output_list, path = paste0(path, "CDE.xlsx"))
+    """
+    # 执行R代码
+    robjects.r(r_code)
+    print("CDE calculation for test completed")
+
 
 
 # if __name__ == "__main__":
