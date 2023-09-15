@@ -1,10 +1,10 @@
-import random
 
 
 
-
-
-
+# import random
+# import numpy as np
+# treatment_grid = np.linspace(0, 10, num=150)
+# treatment_grid_val = np.percentile(treatment_grid, [5, 25, 50, 75, 95])
 
 # import numpy as np
 # from matplotlib import pyplot as plt

@@ -12,7 +12,7 @@ from Simulation.conditional_density_estimation.Flexcode_rpy2 import run_flexcode
 from Simulation.conditional_density_estimation.conditional_density_estimate import cde_adjust
 from Simulation.metrics import mean_squared_error_normalization, integrated_mean_squared_error_normalization
 from Simulation.metrics import survival_true, get_best_bandwidth
-from Simulation.ouput import equal_space, subset_index, subset
+from Simulation.output import equal_space, subset_index, subset
 
 '''
 data

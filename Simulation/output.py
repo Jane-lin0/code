@@ -1,3 +1,4 @@
+import pandas as pd
 from tabulate import tabulate
 import inspect
 import numpy as np
@@ -37,6 +38,21 @@ def subset_index(shape, row_num, col_num):
 # 由于 index 在画图时还有用，因此不和 subset 函数写在一起
 
 
+def treatment_subset_index(shape, row_list, col_num):
+    """
+    随机抽取row_num行col_num列，返回一个对应索引
+    """
+    # 获取 treatment_grid_eval 的 index
+    row_indices = 0
+    # 等间距行索引
+    # row_indices = equal_space(length=shape[0], indices_num=row_num)
+
+    # 等间距列索引 
+    col_indices = equal_space(length=shape[1], indices_num=col_num)
+
+    return row_indices, col_indices
+
+
 def subset(ndarray, row_index, col_index):
     """
     从ndarray中提取抽样出来的行和列，并将其存储在一个新的ndarray中返回
@@ -68,5 +84,21 @@ def print_latex(matrix_output):
     print("=" * 100, "\n", f"{new_name}:\n {table_output}", "\n")
 
     return globals()[new_name]
+
+
+def mean_std_calculation(df):
+    coulumn_names = df.columns
+    mean_values = df.mean().tolist()
+    std_values = df.std().tolist()
+
+    summary_df = pd.DataFrame({
+        'Column': coulumn_names,
+        'Mean': mean_values,
+        'Std': std_values
+    }).T
+
+    df_merged = pd.concat([df, summary_df], axis=0, ignore_index=True)
+
+    return mean_values, std_values, df_merged
 
 

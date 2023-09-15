@@ -10,7 +10,7 @@ from Simulation.conditional_survival_function.conditional_survival_estimate impo
 from Simulation.conditional_density_estimation.conditional_density_estimate import cde_sample_estimate
 from Simulation.metrics import mean_squared_error_normalization, integrated_mean_squared_error_normalization
 from Simulation.metrics import survival_true, get_best_bandwidth, median_survival_time
-from Simulation.ouput import print_latex, subset_index, subset, equal_space
+from Simulation.output import print_latex, subset_index, subset, equal_space
 
 '''
 data

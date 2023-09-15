@@ -13,7 +13,7 @@ from Simulation.conditional_density_estimation.conditional_density_estimate impo
 from Simulation.metrics import mean_squared_error_normalization, integrated_mean_squared_error_normalization, \
     median_survival_time, restricted_mean_squared_error
 from Simulation.metrics import survival_true, get_best_bandwidth
-from Simulation.ouput import equal_space, subset_index, subset
+from Simulation.output import equal_space, subset_index, subset, treatment_subset_index
 
 
 class CounterfactualSurvFtn():
@@ -24,6 +24,7 @@ class CounterfactualSurvFtn():
         self.treatment_num = 5
         self.time_grid = None    # 估计结果中的 time 取值网格点
         self.treatment_grid = None  # 估计结果中的 treatment 取值网格点
+        # self.treatment_grid_eval = None  # 用于误差评估的 treatment
         # self.bandwidth = None     # 单独传入，便于经验法则计算
         self.error_for_bandwidth_list = None  # 画 bandwidth 选择的图
         self.treatment_quantile = []
@@ -53,7 +54,7 @@ class CounterfactualSurvFtn():
         train_validation_split(df=df_train, cv=self.cv, save_path=self.data_path)  # split to validation and test set
         print(f"dataset generated and saved to {self.data_path}")
 
-    def data_generate_empirical(self, sample_num, survival_distribution, test_size):
+    def data_generate_empirical(self, sample_num, survival_distribution, treatment_weights, test_size):
         self.survival_distribution = survival_distribution
         sim = SimulationModel(survival_distribution=self.survival_distribution,
                               risk_type='linear',
@@ -62,8 +63,11 @@ class CounterfactualSurvFtn():
                               )
         dataset = sim.generate_data(num_samples=sample_num, num_features=4,
                                     feature_weights=[-2, 1, 2] + [1],  # beta  gamma
-                                    treatment_weights=[4, 2, 1])  # W
-        # lambda = exp(-1 * x + 1 * a) * alpha , a = 2 * x
+                                    treatment_weights=treatment_weights)  # W：A = W * X + epsilon
+        # dataset = sim.generate_data(num_samples=sample_num, num_features=4,
+        #                             feature_weights=[-2, 1, 2] + [1],  # beta  gamma
+        #                             treatment_weights=[4, 2, 1])  # W：A = W * X + epsilon
+        # lambda = exp(beta * X + gamma * A) * alpha
         dataset.columns = ['x1', 'x2', 'x3', 'a', 'o', 'e', 'lambda']
         train_test_data_split(dataset, test_size=test_size, save_path=self.data_path)  # 只需要 train test data
         # train test split，不设置 random_state，避免重复
@@ -147,6 +151,8 @@ class CounterfactualSurvFtn():
         '''
         # a = 1
         self.treatment_grid = np.linspace(0, max(a_approx), num=n_validation)  # 连续 treatment 估计取值的网格点，可调整
+        # if not self.treatment_grid_eval:
+        #     self.treatment_grid_eval = np.percentile(self.treatment_grid, [5, 25, 50, 75, 95])    # 取5个分位数
         # self.treatment_grid = np.linspace(min(a_approx), max(a_approx), num=n_validation)  # 连续 treatment 估计取值的网格点，可调整
         # treatment_grid = a_approx
 
@@ -165,7 +171,7 @@ class CounterfactualSurvFtn():
         return counterfactual_survival
 
     def estimate_error(self, survival_pred, treatment_testSet, lambda_testSet, method):
-        """
+        """  
         @param survival_pred: ndarray:(len(treatment_grid), len(time_grid))
         @param treatment_testSet:
         @param lambda_testSet:
@@ -175,8 +181,8 @@ class CounterfactualSurvFtn():
         """
         survival_true_values = survival_true(self.survival_distribution, self.treatment_grid, self.time_grid,
                                              treatment_testSet=treatment_testSet, lambda_testSet=lambda_testSet)
-
         row_index, col_index = subset_index(survival_pred.shape, row_num=self.treatment_num, col_num=survival_pred.shape[1])
+        # row_index, col_index = treatment_subset_index(survival_pred.shape, row_list=treatment_grid_eval, col_num=survival_pred.shape[1])
         survival_pred_subset = subset(survival_pred, row_index, col_index)
         survival_true_subset = survival_true(self.survival_distribution, self.treatment_grid[row_index], self.time_grid,
                                         treatment_testSet=treatment_testSet, lambda_testSet=lambda_testSet)
@@ -228,27 +234,27 @@ class CounterfactualSurvFtn():
 
 
 
-if __name__ == "__main__":
-    # 反事实生存函数估计和真实函数图像对比
-    # treatment_idx = np.random.randint(low=0, high=len(treatment_grid)-1, size=3)
-    treatment_idx = equal_space(length=len(treatment_grid), indices_num=5)
-    j = 1
-    for idx, color in zip(treatment_idx, colors):
-        survival_est = counterfactual_survival[idx, :]
-        plt.step(time_grid, survival_est, where="post", label=f"survival_est_{j}", color=color)
-        survival_t = survival_true_values[idx, :]
-        plt.step(time_grid, survival_t, where="post", label=f"survival_true_{j}", color=color, linestyle='--')
-        j += 1
-    plt.legend()
-    plt.xlabel('time')
-    plt.ylabel('survival probability')
-
-    # 将图像保存到本地
-    desktop = os.path.expanduser("~/Desktop")
-    filename = f"h{int(100 * h)}.png"
-    filepath = os.path.join(desktop, filename)
-    plt.savefig(filepath)
-    plt.show()
+# if __name__ == "__main__":
+#     # 反事实生存函数估计和真实函数图像对比
+#     # treatment_idx = np.random.randint(low=0, high=len(treatment_grid)-1, size=3)
+#     treatment_idx = equal_space(length=len(treatment_grid), indices_num=5)
+#     j = 1
+#     for idx, color in zip(treatment_idx, colors):
+#         survival_est = counterfactual_survival[idx, :]
+#         plt.step(time_grid, survival_est, where="post", label=f"survival_est_{j}", color=color)
+#         survival_t = survival_true_values[idx, :]
+#         plt.step(time_grid, survival_t, where="post", label=f"survival_true_{j}", color=color, linestyle='--')
+#         j += 1
+#     plt.legend()
+#     plt.xlabel('time')
+#     plt.ylabel('survival probability')
+#
+#     # 将图像保存到本地
+#     desktop = os.path.expanduser("~/Desktop")
+#     filename = f"h{int(100 * h)}.png"
+#     filepath = os.path.join(desktop, filename)
+#     plt.savefig(filepath)
+#     plt.show()
 
 
     # def estimate_error_mse(self, survival_pred, treatment_testSet, lambda_testSet):

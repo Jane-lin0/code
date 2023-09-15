@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import pandas as pd
 import scipy.stats
@@ -56,6 +58,25 @@ def conditional_density_estimate(df_train, df_validation, df_test, n_grid):
     # return cde, a_grid
     return cde, a_grid, test_error
 
+
+def conditional_density_true(x_matrix, treatment_weights, a_grid):
+    """
+    @param x_matrix: shape: test_sample_num * covariance_num
+    @param treatment_weights: W: A = w * X + epsilon, epsilon ~ N(0, 1)
+    @param a_grid: 网格值
+    @return: true conditional density at a_grid
+    """
+    std = 1
+    mean = np.dot(x_matrix, treatment_weights)
+    cde_true = np.empty(shape=(0, len(a_grid)))
+    for u in mean:
+        cde_true_u = []
+        for a in a_grid:
+            # 均值为u的正态分布在取值a处的值
+            cde_true_u_a = 1 / (math.sqrt(2 * math.pi) * std) * math.exp(-((a - u) ** 2) / (2 * std ** 2))
+            cde_true_u.append(cde_true_u_a)
+        cde_true = np.vstack([cde_true, cde_true_u])
+    return cde_true
 
 # n = 1000
 # df = data_generate(N=n)
