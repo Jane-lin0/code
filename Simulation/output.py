@@ -40,6 +40,7 @@ def subset_index(shape, row_num, col_num):
 
 def treatment_subset_index(shape, row_list, col_num):
     """
+    废弃
     随机抽取row_num行col_num列，返回一个对应索引
     """
     # 获取 treatment_grid_eval 的 index

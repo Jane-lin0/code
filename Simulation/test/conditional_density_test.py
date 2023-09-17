@@ -1,5 +1,4 @@
 import time
-
 import numpy as np
 import pandas as pd
 from Simulation.conditional_density_estimation.conditional_density_estimate import conditional_density_true
@@ -7,7 +6,7 @@ from Simulation.metrics import integrated_mean_squared_error, integrated_mean_sq
 from Simulation.simulation_process.simulation_main import CounterfactualSurvFtn
 from Simulation.conditional_density_estimation.Flexcode_rpy2 import run_flexcode_empirical
 
-start_time = time.time()
+# start_time = time.time()
 
 '''========== ========== 参数修改 ========== ========== '''
 # n_list = [200, 400, 800]
@@ -26,9 +25,11 @@ treatment_weights = [4, 2, 1]
 simulation_times = 200  # 30
 '''========== ========== ========== ========== ========== '''
 
+imse_adj_list = []
 imse_list = []
 for n in n_list:
     path = fr"C:\Users\janline\OneDrive - stu.xmu.edu.cn\学校\论文\论文代码\simulation_data\test\{n}"
+    imse_adj_for_n = []
     imse_for_n = []
     for i in range(simulation_times):
         model = CounterfactualSurvFtn(path=path, cv=cv)
@@ -50,14 +51,20 @@ for n in n_list:
         cde_true = conditional_density_true(x_matrix=x_matrix, treatment_weights=treatment_weights, a_grid=a_grid)
 
         # 条件密度如何评估？IMSE
-        imse_cde = integrated_mean_squared_error_normalization(cde_estimates, cde_true, a_grid)
+        imse_adj_cde = integrated_mean_squared_error_normalization(cde_estimates, cde_true, a_grid)
+        imse_cde = integrated_mean_squared_error(cde_estimates, cde_true, a_grid)
+        imse_adj_for_n.append(imse_adj_cde)
         imse_for_n.append(imse_cde)
+    imse_adj_list.append(np.mean(imse_adj_for_n))
     imse_list.append(np.mean(imse_for_n))
 
 '''
 n_list = [200, 400, 600, 800, 1000]
 200 次平均
-imse_list = [2.452739149093216, 2.1786972007094088, 2.0720803119448554, 2.0512903535086426, 1.9951831231777066]
+imse_adj_list = [2.452739149093216, 2.1786972007094088, 2.0720803119448554, 2.0512903535086426, 1.9951831231777066]
+imse_adj_list = [2.355347064113422, 2.2115777613313803, 2.056291810135673, 2.0116336246735993, 2.002154073864939]
+
+imse_list = [6.295398339262366, 12.88502704704536, 19.885254242591728, 27.28828398521328, 33.840040731722226]
 '''
 
 # n_list = [200, 400, 800]

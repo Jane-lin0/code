@@ -21,13 +21,12 @@ class CounterfactualSurvFtn():
         self.data_path = path   # the path to save data
         self.cv = cv    # cross validation for train validation data
         self.survival_distribution = None
-        self.treatment_num = 5
         self.time_grid = None    # 估计结果中的 time 取值网格点
         self.treatment_grid = None  # 估计结果中的 treatment 取值网格点
         # self.treatment_grid_eval = None  # 用于误差评估的 treatment
         # self.bandwidth = None     # 单独传入，便于经验法则计算
         self.error_for_bandwidth_list = None  # 画 bandwidth 选择的图
-        self.treatment_quantile = []
+        self.treatment_eval_grid = np.linspace(0, 1, 11)  # 生成 11 个数：0，0.1，···，1
 
     def data_generate(self, sample_num, survival_distribution, test_size):
         """
@@ -47,7 +46,7 @@ class CounterfactualSurvFtn():
                                     treatment_weights=[4, 2, 1])  # W
         # lambda = exp(-1 * x + 1 * a) * alpha , a = 2 * x
         dataset.columns = ['x1', 'x2', 'x3', 'a', 'o', 'e', 'lambda']
-        self.treatment_quantile = np.percentile(dataset['a'], [0, 25, 50, 75, 100])  # 后续对估计进行评估
+        # self.treatment_quantile = np.percentile(dataset['a'], [0, 25, 50, 75, 100])  # 后续对估计进行评估
         train_test_data_split(dataset, test_size=test_size, save_path=self.data_path)
         # train test split，不设置 random_state，避免重复
         df_train = pd.read_excel(self.data_path+'data.xlsx', sheet_name='train')
@@ -150,7 +149,8 @@ class CounterfactualSurvFtn():
         kernel setting, calculate Sa(t)：每个 a_grid 下的生存函数估计
         '''
         # a = 1
-        self.treatment_grid = np.linspace(0, max(a_approx), num=n_validation)  # 连续 treatment 估计取值的网格点，可调整
+        # self.treatment_grid = np.linspace(0, max(a_approx), num=n_validation)  # 连续 treatment 估计取值的网格点，可调整
+        self.treatment_grid = np.arange(0, max(a_approx)+0.01, 0.01)  # 连续 treatment 估计取值的网格点，间隔为 0.01
         # if not self.treatment_grid_eval:
         #     self.treatment_grid_eval = np.percentile(self.treatment_grid, [5, 25, 50, 75, 95])    # 取5个分位数
         # self.treatment_grid = np.linspace(min(a_approx), max(a_approx), num=n_validation)  # 连续 treatment 估计取值的网格点，可调整
@@ -181,14 +181,21 @@ class CounterfactualSurvFtn():
         """
         survival_true_values = survival_true(self.survival_distribution, self.treatment_grid, self.time_grid,
                                              treatment_testSet=treatment_testSet, lambda_testSet=lambda_testSet)
-        row_index, col_index = subset_index(survival_pred.shape, row_num=self.treatment_num, col_num=survival_pred.shape[1])
-        # row_index, col_index = treatment_subset_index(survival_pred.shape, row_list=treatment_grid_eval, col_num=survival_pred.shape[1])
+        # row_index, col_index = subset_index(survival_pred.shape, row_num=self.treatment_num, col_num=survival_pred.shape[1])
+        row_index = np.searchsorted(self.treatment_grid, self.treatment_eval_grid)
+        col_index = np.arange(len(self.time_grid))
+        # col_index = equal_space(length=survival_pred.shape[1], indices_num=survival_pred.shape[1])
+        # self.treatment_eval_grid 的 indices: self.treatment_grid 的前 11 行
+        # 保险起见用 searchsorted 查找 treatment_eval_grid 在 treatment_grid 中的索引
+        # row_index, col_index = treatment_subset_index(survival_pred.shape, row_list=treatment_eval_grid,
+        #                                               col_num=survival_pred.shape[1])
         survival_pred_subset = subset(survival_pred, row_index, col_index)
         survival_true_subset = survival_true(self.survival_distribution, self.treatment_grid[row_index], self.time_grid,
                                         treatment_testSet=treatment_testSet, lambda_testSet=lambda_testSet)
-        if survival_pred_subset.shape[0] != self.treatment_num or survival_true_subset.shape[0] != self.treatment_num:
-            survival_pred_subset = survival_pred_subset.reshape(self.treatment_num, -1)
-            survival_true_subset = survival_true_subset.reshape(self.treatment_num, -1)
+        treatment_num = len(self.treatment_eval_grid)
+        if survival_pred_subset.shape[0] != treatment_num or survival_true_subset.shape[0] != treatment_num:
+            survival_pred_subset = survival_pred_subset.reshape(treatment_num, -1)
+            survival_true_subset = survival_true_subset.reshape(treatment_num, -1)
         # else:
         #     pass
 
@@ -198,7 +205,7 @@ class CounterfactualSurvFtn():
 
         elif method == 'mse':
             mse_list = []
-            for idx in range(self.treatment_num):
+            for idx in range(treatment_num):
                 survival_pred_a = survival_pred_subset[idx, :].reshape(1, -1)
                 survival_true_a = survival_true_subset[idx, :].reshape(1, -1)
                 mse = mean_squared_error_normalization(survival_pred_a, survival_true_a, self.time_grid)
@@ -207,7 +214,7 @@ class CounterfactualSurvFtn():
 
         elif method == 'rmse':
             rmse_list = []
-            for idx in range(self.treatment_num):
+            for idx in range(treatment_num):
                 survival_pred_a = survival_pred_subset[idx, :].reshape(1, -1)
                 survival_true_a = survival_true_subset[idx, :].reshape(1, -1)
                 rmse = restricted_mean_squared_error(survival_pred_a, survival_true_a, self.time_grid)

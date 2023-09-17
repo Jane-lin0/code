@@ -164,8 +164,8 @@ def run_flexcode_empirical(sample_num):
     fit = fitFlexCoDE(xtrain,ztrain,xvalidation,zvalidation,xtest,ztest,
                     nIMax = 10,
                     regressionFunction = regressionFunction.NW,
-                    n_grid = 1000)
-    predictedValues = predict(fit,xtest,B=1000)  # B的大小决定cde的稀疏
+                    n_grid = 1000)   # n_grid: Number of grid points to evaluate estimated densities 
+    predictedValues = predict(fit,xtest,B=2000)  # B的大小决定cde的稀疏
     cde = as.data.frame(predictedValues$CDE)
     grid = as.data.frame(predictedValues$z)
     names(grid) = c('a')
