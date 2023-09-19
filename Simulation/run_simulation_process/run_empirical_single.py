@@ -5,10 +5,10 @@ from Simulation.simulation_process.simulation_main import CounterfactualSurvFtn
 from Simulation.conditional_density_estimation.Flexcode_rpy2 import run_flexcode_empirical, run_flexcode_test
 
 
-def run_convergence_empirical(n, bandwidth, cv, survival_distribution, path, test_size):
+def run_convergence_empirical(n, bandwidth, survival_distribution, path, test_size):
 
     # 模型导入
-    model = CounterfactualSurvFtn(path=path, cv=cv)
+    model = CounterfactualSurvFtn(path=path)
 
     # 数据生成
     model.data_generate_empirical(sample_num=n, survival_distribution=survival_distribution,

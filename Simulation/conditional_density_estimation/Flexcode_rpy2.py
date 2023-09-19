@@ -136,8 +136,8 @@ def run_flexcode_empirical(sample_num):
     library(writexl)
 
     N <- {sample_num}
-    # path <- paste0("C:/Users/janline/OneDrive - stu.xmu.edu.cn/学校/论文/论文代码/simulation_data/simulation_empirical/",N)
-    path <- paste0("C:/Users/janline/OneDrive - stu.xmu.edu.cn/学校/论文/论文代码/simulation_data/test/",N)
+    path <- paste0("C:/Users/janline/OneDrive - stu.xmu.edu.cn/学校/论文/论文代码/simulation_data/simulation_empirical/20230917/",N)
+    # path <- paste0("C:/Users/janline/OneDrive - stu.xmu.edu.cn/学校/论文/论文代码/simulation_data/test/",N)
 
     df <- read_excel(paste0(path, "data.xlsx"), sheet = "train")
     df_test <- read_excel(paste0(path, "data.xlsx"), sheet = "test")

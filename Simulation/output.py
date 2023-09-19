@@ -93,13 +93,12 @@ def mean_std_calculation(df):
     std_values = df.std().tolist()
 
     summary_df = pd.DataFrame({
-        'Column': coulumn_names,
+        # 'Column': coulumn_names,
         'Mean': mean_values,
         'Std': std_values
     }).T
-
-    df_merged = pd.concat([df, summary_df], axis=0, ignore_index=True)
-
+    # df_merged = pd.concat([df, summary_df], axis=0, ignore_index=True)
+    df_merged = pd.concat([df, summary_df], axis=0)
     return mean_values, std_values, df_merged
 
 

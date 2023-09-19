@@ -17,9 +17,9 @@ from Simulation.output import equal_space, subset_index, subset, treatment_subse
 
 
 class CounterfactualSurvFtn():
-    def __init__(self, path, cv):
+    def __init__(self, path):
         self.data_path = path   # the path to save data
-        self.cv = cv    # cross validation for train validation data
+        # self.cv = cv    # cross validation for train validation data
         self.survival_distribution = None
         self.time_grid = None    # 估计结果中的 time 取值网格点
         self.treatment_grid = None  # 估计结果中的 treatment 取值网格点
@@ -28,7 +28,7 @@ class CounterfactualSurvFtn():
         self.error_for_bandwidth_list = None  # 画 bandwidth 选择的图
         self.treatment_eval_grid = np.linspace(0, 1, 11)  # 生成 11 个数：0，0.1，···，1
 
-    def data_generate(self, sample_num, survival_distribution, test_size):
+    def data_generate(self, sample_num, survival_distribution, test_size, cv):
         """
         @param sample_num:
         @param survival_distribution: exponential, Weibull, Gompertz, Log-Logistic, Log-Normal
@@ -50,7 +50,7 @@ class CounterfactualSurvFtn():
         train_test_data_split(dataset, test_size=test_size, save_path=self.data_path)
         # train test split，不设置 random_state，避免重复
         df_train = pd.read_excel(self.data_path+'data.xlsx', sheet_name='train')
-        train_validation_split(df=df_train, cv=self.cv, save_path=self.data_path)  # split to validation and test set
+        train_validation_split(df=df_train, cv=cv, save_path=self.data_path)  # split to validation and test set
         print(f"dataset generated and saved to {self.data_path}")
 
     def data_generate_empirical(self, sample_num, survival_distribution, treatment_weights, test_size):

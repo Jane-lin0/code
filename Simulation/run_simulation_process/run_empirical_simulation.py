@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 import numpy as np
 import pandas as pd
 from Simulation.output import mean_std_calculation
@@ -8,18 +9,18 @@ start_time = time.time()
 
 '''========== ========== 参数修改 ========== ========== '''
 # N = 300
-sample_list = [200, 400, 800]   # 200-700，间隔100
+sample_list = [200, 400, 600, 800]   # 200-700，间隔100
 # sample_list = [200]
 '''！！！！！记得修改 run_flexcode 函数的样本数 N ！！！！！'''
 bandwidth = 0.25
 # bandwidth_list = np.array([0.25, 0.5, 0.75, 1])
 # bandwidth_list = np.logspace(-2, 0, num=15)  # 0.001 至 1 之间的 10 个数
-cv = 5
+# cv = 5
 survival_distribution = 'exponential'
 path_base = r"C:\Users\janline\OneDrive - stu.xmu.edu.cn\学校\论文\论文代码\simulation_data\simulation_empirical"
 test_size = 0.15
 # validation_evaluation_method = 'rmse'
-treatment_num = 5
+treatment_num = 11
 simulation_times = 200  # 30
 '''========== ========== ========== ========== ========== '''
 
@@ -32,15 +33,16 @@ simulation_std_mse = np.empty(shape=(0, treatment_num))
 simulation_std_rmse = np.empty(shape=(0, treatment_num))
 simulation_std_bias = np.empty(shape=(0, treatment_num))
 
+run_date = datetime.today().strftime('%Y%m%d')
 for N in sample_list:
-    path = f"{path_base}/{N}"
+    path = f"{path_base}/{run_date}/{N}"
     imse_list = []
-    mse_array = np.empty(shape=(0, treatment_num))  # 5 个 treatment 的误差
+    mse_array = np.empty(shape=(0, treatment_num))  # treatment_num 个 treatment 的误差
     rmse_array = np.empty(shape=(0, treatment_num))
     bias_array = np.empty(shape=(0, treatment_num))
 
     for i in range(simulation_times):
-        imse, mse, rmse, median_survival_time_bias = run_convergence_empirical(n=N, bandwidth=bandwidth, cv=cv,
+        imse, mse, rmse, median_survival_time_bias = run_convergence_empirical(n=N, bandwidth=bandwidth,
                                                                                survival_distribution=survival_distribution,
                                                                                path=path, test_size=test_size)
         imse_list.append(imse)
