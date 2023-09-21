@@ -4,6 +4,7 @@ from rpy2.robjects.packages import importr
 from rpy2.robjects.packages import SignatureTranslatedAnonymousPackage
 from rpy2.robjects import conversion
 from rpy2.robjects import pandas2ri
+from rpy2.robjects import conversion, default_converter
 
 
 def run_flexcode_validation():
@@ -129,6 +130,7 @@ def run_flexcode_empirical(sample_num):
     @param sample_num:
     @return: simulation_empirical 路径中
     """
+    # with conversion.localconverter(default_converter):
     # 定义R代码字符串
     r_code = f"""
     library(readxl)
@@ -136,7 +138,7 @@ def run_flexcode_empirical(sample_num):
     library(writexl)
 
     N <- {sample_num}
-    path <- paste0("C:/Users/janline/OneDrive - stu.xmu.edu.cn/学校/论文/论文代码/simulation_data/simulation_empirical/20230917/",N)
+    path <- paste0("C:/Users/janline/OneDrive - stu.xmu.edu.cn/学校/论文/论文代码/simulation_data/simulation_empirical/20230919/",N)
     # path <- paste0("C:/Users/janline/OneDrive - stu.xmu.edu.cn/学校/论文/论文代码/simulation_data/test/",N)
 
     df <- read_excel(paste0(path, "data.xlsx"), sheet = "train")

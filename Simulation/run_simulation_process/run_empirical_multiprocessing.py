@@ -5,23 +5,29 @@ import pandas as pd
 from Simulation.output import mean_std_calculation
 from Simulation.run_simulation_process.run_empirical_single import run_convergence_empirical
 import multiprocessing
+from rpy2.rinterface_lib import openrlib
 import threading
 
+# 由于Python的全局解释器锁（GIL），threading在CPU密集型任务中的性能可能受到限制。
+# 如果代码中的run_convergence_empirical函数是CPU密集型的，并且希望充分利用多核处理器，
+# 可能需要考虑使用multiprocessing模块来实现多进程并行化，以避免GIL的限制。
 
-def run_simulation(N, bandwidth, survival_distribution, path, test_size, simulation_times, treatment_num, result_lock, result_dict):
+
+def run_simulation(N, bandwidth, survival_distribution, path, test_size, simulation_times, treatment_num, result_dict):
     imse_list = []
     mse_array = np.empty(shape=(0, treatment_num))
     rmse_array = np.empty(shape=(0, treatment_num))
     bias_array = np.empty(shape=(0, treatment_num))
 
-    for i in range(simulation_times):
-        imse, mse, rmse, median_survival_time_bias = run_convergence_empirical(n=N, bandwidth=bandwidth,
-                                                                               survival_distribution=survival_distribution,
-                                                                               path=path, test_size=test_size)
-        imse_list.append(imse)
-        mse_array = np.vstack([mse_array, mse])
-        rmse_array = np.vstack([rmse_array, rmse])
-        bias_array = np.vstack([bias_array, median_survival_time_bias])
+    with openrlib.rlock:
+        for i in range(simulation_times):
+            imse, mse, rmse, median_survival_time_bias = run_convergence_empirical(n=N, bandwidth=bandwidth,
+                                                                                   survival_distribution=survival_distribution,
+                                                                                   path=path, test_size=test_size)
+            imse_list.append(imse)
+            mse_array = np.vstack([mse_array, mse])
+            rmse_array = np.vstack([rmse_array, rmse])
+            bias_array = np.vstack([bias_array, median_survival_time_bias])
 
     df_imse = pd.DataFrame(imse_list, columns=['IMSE'])
     mean_imse, std_imse, df_imse = mean_std_calculation(df_imse)
@@ -36,17 +42,17 @@ def run_simulation(N, bandwidth, survival_distribution, path, test_size, simulat
     mean_bias, std_bias, df_bias = mean_std_calculation(df_bias)
 
     # 使用锁来保护对结果字典的访问
-    with result_lock:
-        result_dict[N] = {
-            'mean_imse': mean_imse,
-            'std_imse': std_imse,
-            'mean_mse': mean_mse,
-            'std_mse': std_mse,
-            'mean_rmse': mean_rmse,
-            'std_rmse': std_rmse,
-            'mean_bias': mean_bias,
-            'std_bias': std_bias
-        }
+    # with result_lock:
+    result_dict[N] = {
+        'mean_imse': mean_imse,
+        'std_imse': std_imse,
+        'mean_mse': mean_mse,
+        'std_mse': std_mse,
+        'mean_rmse': mean_rmse,
+        'std_rmse': std_rmse,
+        'mean_bias': mean_bias,
+        'std_bias': std_bias
+    }
     # result_queue.put((N, mean_imse, std_imse, mean_mse, std_mse, mean_rmse, std_rmse, mean_bias, std_bias))
 
 
@@ -104,7 +110,7 @@ def main():
     treatment_num = 11
     simulation_times = 2
 
-    result_lock = threading.Lock()
+    # result_lock = threading.Lock()
     result_dict = {}
     threads = []
 
@@ -115,7 +121,7 @@ def main():
         path = f"{path_base}/{N}"
         thread = threading.Thread(target=run_simulation,
                                   args=(N, bandwidth, survival_distribution, path, test_size,
-                                        simulation_times, treatment_num, result_lock, result_dict))
+                                        simulation_times, treatment_num, result_dict))
         threads.append(thread)
         thread.start()
 
