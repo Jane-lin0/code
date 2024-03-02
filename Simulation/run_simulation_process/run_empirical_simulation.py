@@ -9,16 +9,15 @@ start_time = time.time()
 
 '''========== ========== 参数修改 ========== ========== '''
 # N = 300
-sample_list = [200, 400, 600, 800]   # 200-700，间隔100
+sample_list = [200, 800, 1500, 3000]   # 200-700，间隔100
 # sample_list = [200]
-'''！！！！！记得修改 run_flexcode 函数的样本数 N ！！！！！'''
 bandwidth = 0.25
 # bandwidth_list = np.array([0.25, 0.5, 0.75, 1])
 # bandwidth_list = np.logspace(-2, 0, num=15)  # 0.001 至 1 之间的 10 个数
 # cv = 5
 survival_distribution = 'exponential'
-path_base = r"C:\Users\janline\OneDrive - stu.xmu.edu.cn\学校\论文\论文代码\simulation_data\simulation_empirical"
-test_size = 0.15
+path_base = r"C:\Users\janline\Desktop\论文\论文代码\simulation_data\simulation_empirical"
+test_size = 0.2
 # validation_evaluation_method = 'rmse'
 treatment_num = 11
 simulation_times = 200  # 30
@@ -87,7 +86,7 @@ df_simulation_std_mse = pd.DataFrame(simulation_std_mse, index=sample_list)
 df_simulation_std_rmse = pd.DataFrame(simulation_std_rmse, index=sample_list)
 df_simulation_std_bias = pd.DataFrame(simulation_std_bias, index=sample_list)
 
-writer = pd.ExcelWriter(path_base + "/simulation_Summary.xlsx", engine='xlsxwriter')
+writer = pd.ExcelWriter(f"{path_base}/{run_date}/Simulation_Summary.xlsx", engine='xlsxwriter')
 df_simulation_mean_imse.to_excel(writer, sheet_name='imse_mean')
 df_simulation_mean_mse.to_excel(writer, sheet_name='mse_mean')
 df_simulation_mean_rmse.to_excel(writer, sheet_name='rmse_mean')

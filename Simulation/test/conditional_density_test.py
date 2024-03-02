@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from Simulation.conditional_density_estimation.conditional_density_estimate import conditional_density_true
 from Simulation.metrics import integrated_mean_squared_error, integrated_mean_squared_error_normalization
-from Simulation.simulation_process.simulation_main import CounterfactualSurvFtn
+from Simulation.simulation_process.main_class import CounterfactualSurvFtn
 from Simulation.conditional_density_estimation.Flexcode_rpy2 import run_flexcode_empirical
 
 # start_time = time.time()

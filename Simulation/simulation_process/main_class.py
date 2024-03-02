@@ -5,7 +5,8 @@ from scipy.stats import expon
 from sksurv.metrics import integrated_brier_score, concordance_index_censored
 from matplotlib import pyplot as plt
 from Simulation.data_generating.DGP_pysurvival import SimulationModel
-from Simulation.data_generating.data_generate_process import train_test_data_split, train_validation_split
+from Simulation.data_generating.data_generate import generate_data
+from Simulation.data_generating.data_processing import train_test_data_split, train_validation_split
 from Simulation.kernel_density_smoothing.density_estimate import density_estimate
 from Simulation.kernel_setting import gaussian_kernel
 from Simulation.conditional_survival_function.conditional_survival_estimate import conditional_survival_estimate, get_x_y
@@ -18,6 +19,9 @@ from Simulation.output import equal_space, subset_index, subset, treatment_subse
 
 class CounterfactualSurvFtn():
     def __init__(self, path):
+        self.a = None
+        self.survival_true_subset = None
+        self.survival_pred_subset = None
         self.data_path = path   # the path to save data
         # self.cv = cv    # cross validation for train validation data
         self.survival_distribution = None
@@ -26,12 +30,17 @@ class CounterfactualSurvFtn():
         # self.treatment_grid_eval = None  # 用于误差评估的 treatment
         # self.bandwidth = None     # 单独传入，便于经验法则计算
         self.error_for_bandwidth_list = None  # 画 bandwidth 选择的图
-        self.treatment_eval_grid = np.linspace(0, 1, 11)  # 生成 11 个数：0，0.1，···，1
+        self.treatment_eval_grid = np.arange(start=0.2, end=0.9, step=0.1)
+        # np.linspace(0, 1, 11)  # 生成 11 个数：0，0.1，···，1
+        # self.u_0 = None
+        # self.u_1 = None  # the weights to generate X, X = u_0 + u_1 * uniform[0,1]
+        # self.w = None  # the weights to generate A, A = w * X + N(0,1)
+        # self.arg_lambda = None  # the function to generate argument lambda
 
     def data_generate(self, sample_num, survival_distribution, test_size, cv):
         """
         @param sample_num:
-        @param survival_distribution: exponential, Weibull, Gompertz, Log-Logistic, Log-Normal
+        @param survival_distribution: exponential, weibull, gompertz, log_logistic, log_normal
         @param test_size:
         @return:
         """
@@ -53,26 +62,17 @@ class CounterfactualSurvFtn():
         train_validation_split(df=df_train, cv=cv, save_path=self.data_path)  # split to validation and test set
         print(f"dataset generated and saved to {self.data_path}")
 
-    def data_generate_empirical(self, sample_num, survival_distribution, treatment_weights, test_size):
-        self.survival_distribution = survival_distribution
-        sim = SimulationModel(survival_distribution=self.survival_distribution,
-                              risk_type='linear',
-                              alpha=1,
-                              beta=1
-                              )
-        dataset = sim.generate_data(num_samples=sample_num, num_features=4,
-                                    feature_weights=[-2, 1, 2] + [1],  # beta  gamma
-                                    treatment_weights=treatment_weights)  # W：A = W * X + epsilon
-        # dataset = sim.generate_data(num_samples=sample_num, num_features=4,
-        #                             feature_weights=[-2, 1, 2] + [1],  # beta  gamma
-        #                             treatment_weights=[4, 2, 1])  # W：A = W * X + epsilon
-        # lambda = exp(beta * X + gamma * A) * alpha
-        dataset.columns = ['x1', 'x2', 'x3', 'a', 'o', 'e', 'lambda']
-        train_test_data_split(dataset, test_size=test_size, save_path=self.data_path)  # 只需要 train test data
-        # train test split，不设置 random_state，避免重复
+    def data_generate_empirical(self, survival_distribution, sample_num, test_size):
+        # self.survival_distribution = survival_distribution
+        # self.u_0, self.u_1 = 2, 1  # the weights to generate X, X = u_0 + u_1 * uniform[0,1]
+        # self.w = 2                 # the weights to generate A, A = w * X + N(0,1)
+        # self.arg_lambda = lambda a, x: a + x    # the function to generate argument lambda
+        dataset = generate_data(survival_distribution=survival_distribution, sample_num=sample_num, a=self.a)  # 设定 X、A 为正态分布
+        dataset.columns = ['x', 'a', 'o', 'e']
+        train_test_data_split(dataset, test_size=test_size, save_path=self.data_path)  # 不设置 random_state以避免重复
         print(f"dataset generated and saved to {self.data_path}")
 
-    def fit(self, bandwidth_list, evaluation_method, visualization):
+    def fit(self, bandwidth_list, evaluation_method):
         """
         @param bandwidth_list: the bandwidth list to choose best bandwidth
         @return: return best bandwidth
@@ -88,9 +88,7 @@ class CounterfactualSurvFtn():
                 a_grid = pd.read_excel(self.data_path + f"CDE{i}.xlsx", sheet_name='Sheet2')
                 survival_pred = self.predict(df_train, df_validation, cde_estimates, a_grid, h)
                 # survival_pred = self.predict(df_train, df_validation, cde_estimates, a_grid)
-                error = self.estimate_error(survival_pred,
-                                                 treatment_testSet=df_validation['a'],
-                                                 lambda_testSet=df_validation['lambda'], method=evaluation_method)
+                error = self.estimate_error(survival_pred, method=evaluation_method)
                 if evaluation_method != 'imse':
                     error = np.mean(error)
                 error_for_h.append(error)
@@ -99,9 +97,9 @@ class CounterfactualSurvFtn():
         # self.bandwidth = get_best_bandwidth(error_list=error_for_bandwidth_list, h_list=bandwidth_list)
         best_bandwidth = get_best_bandwidth(error_list=error_for_bandwidth_list, h_list=bandwidth_list)
         print(f"best bandwidth is {best_bandwidth}")
-        if visualization:
-            self.visualization(bandwidth_list, error_for_bandwidth_list, evaluation_method)
-        return best_bandwidth
+        # if visualization:
+        #     self.visualization(bandwidth_list, error_for_bandwidth_list, evaluation_method)
+        # return best_bandwidth
 
     # def predict(self, df_train, df_validation, cde_estimates, a_grid, best_bandwidth):
     def predict(self, df_train, df_validation, cde_estimates, a_grid, bandwidth):
@@ -146,7 +144,7 @@ class CounterfactualSurvFtn():
         conditional_survival_estimated = conditional_survival_estimate(df_train, df_validation, self.time_grid)  # 未调参
         # ndarray:(len(df_test), len(time_grid))
         '''
-        kernel setting, calculate Sa(t)：每个 a_grid 下的生存函数估计
+        kernel setting, calculate hat{Sa(t)}：每个 a_grid 下的生存函数估计
         '''
         # a = 1
         # self.treatment_grid = np.linspace(0, max(a_approx), num=n_validation)  # 连续 treatment 估计取值的网格点，可调整
@@ -170,17 +168,15 @@ class CounterfactualSurvFtn():
         # ndarray:(len(treatment_grid), len(time_grid))
         return counterfactual_survival
 
-    def estimate_error(self, survival_pred, treatment_testSet, lambda_testSet, method):
+    def estimate_error(self, survival_pred, method):
         """  
         @param survival_pred: ndarray:(len(treatment_grid), len(time_grid))
-        @param treatment_testSet:
-        @param lambda_testSet:
         # @param treatment_num: the treatment num to estimate error, i.e. the output row
         @param method: the error calculation method, imse, mse, rmse, bias
         @return: estimate error
         """
         survival_true_values = survival_true(self.survival_distribution, self.treatment_grid, self.time_grid,
-                                             treatment_testSet=treatment_testSet, lambda_testSet=lambda_testSet)
+                                             self.u_0, self.u_1, self.arg_lambda)
         # row_index, col_index = subset_index(survival_pred.shape, row_num=self.treatment_num, col_num=survival_pred.shape[1])
         row_index = np.searchsorted(self.treatment_grid, self.treatment_eval_grid)
         col_index = np.arange(len(self.time_grid))
@@ -191,7 +187,9 @@ class CounterfactualSurvFtn():
         #                                               col_num=survival_pred.shape[1])
         survival_pred_subset = subset(survival_pred, row_index, col_index)
         survival_true_subset = survival_true(self.survival_distribution, self.treatment_grid[row_index], self.time_grid,
-                                        treatment_testSet=treatment_testSet, lambda_testSet=lambda_testSet)
+                                        self.u_0, self.u_1, self.arg_lambda)
+        self.survival_pred_subset = survival_pred_subset
+        self.survival_true_subset = survival_true_subset
         treatment_num = len(self.treatment_eval_grid)
         if survival_pred_subset.shape[0] != treatment_num or survival_true_subset.shape[0] != treatment_num:
             survival_pred_subset = survival_pred_subset.reshape(treatment_num, -1)
@@ -230,14 +228,57 @@ class CounterfactualSurvFtn():
         else:
             print('No such method')
 
-    def visualization(self, bandwidth_list, error_for_bandwidth_list, evaluation_method):
-        colors = ['r', 'g', 'b', 'y', 'pink']
-        # bandwidth-error plot
-        plt.figure()
-        plt.plot(bandwidth_list, error_for_bandwidth_list, marker='o')
-        plt.xlabel('bandwidth')
-        plt.ylabel(f"{evaluation_method.upper()}")
+    def visualization(self):
+        # 创建一个3x3的子图布局
+        fig, axes = plt.subplots(3, 3)
+        row_index = 0
+        # 循环遍历每个子图
+        for i in range(3):
+            for j in range(3):
+                x = self.time_grid
+                survival_true_val = self.survival_true_subset[row_index, :]
+                survival_pred_val = self.survival_pred_subset[row_index, :]
+
+                # 在子图中绘制数据
+                axes[i, j].plot(x, survival_true_val, label=r'$S_a(t)$')
+                axes[i, j].plot(x, survival_pred_val, label=r'$\hat{S}_a(t)$', linestyle='--')
+
+                axes[i, j].set_xlabel('t')
+                # axes[i, j].set_ylabel()
+
+                # 添加标题
+                axes[i, j].set_title('Treatment A = {:.1f}'.format(self.treatment_eval_grid[row_index]))
+
+                # 缩小坐标轴标签的字体大小
+                axes[i, j].tick_params(axis='both', which='both', labelsize=8)
+                # 设置 x 和 y 轴的范围
+                # axes[i, j].set_xlim(0, 2)  # 根据实际情况设置范围
+                axes[i, j].set_ylim(-0.1, 1.1)  # 根据实际情况设置范围
+
+                # 去掉坐标轴方框
+                # axes[i, j].spines['top'].set_color('none')
+                # # axes[i, j].spines['bottom'].set_color('none')
+                # # axes[i, j].spines['left'].set_color('none')
+                # axes[i, j].spines['right'].set_color('none')
+
+                row_index += 1   # 更换下一个 treatment
+
+        axes[i, j].legend()
+
+        # 调整子图之间的间距
+        plt.tight_layout()
+
+        # 显示图形
         plt.show()
+
+    # def visualization(self, bandwidth_list, error_for_bandwidth_list, evaluation_method):
+    #     colors = ['r', 'g', 'b', 'y', 'pink']
+    #     # bandwidth-error plot
+    #     plt.figure()
+    #     plt.plot(bandwidth_list, error_for_bandwidth_list, marker='o')
+    #     plt.xlabel('bandwidth')
+    #     plt.ylabel(f"{evaluation_method.upper()}")
+    #     plt.show()
 
 
 

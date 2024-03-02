@@ -1,7 +1,7 @@
 import time
 import numpy as np
 import pandas as pd
-from Simulation.simulation_process.simulation_main import CounterfactualSurvFtn
+from Simulation.simulation_process.main_class import CounterfactualSurvFtn
 from Simulation.conditional_density_estimation.Flexcode_rpy2 import run_flexcode_validation, run_flexcode_test
 
 start_time = time.time()

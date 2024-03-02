@@ -4,7 +4,7 @@ import os
 from scipy.stats import expon
 from sksurv.metrics import integrated_brier_score, concordance_index_censored
 from matplotlib import pyplot as plt
-from Simulation.data_generating.data_generate_process import data_generate
+from Simulation.data_generating.data_processing import data_generate
 from Simulation.kernel_density_smoothing.density_estimate import density_estimate
 from Simulation.kernel_setting import gaussian_kernel
 from Simulation.conditional_survival_function.conditional_survival_estimate import conditional_survival_estimate, get_x_y

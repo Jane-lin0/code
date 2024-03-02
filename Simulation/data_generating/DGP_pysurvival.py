@@ -264,8 +264,8 @@ class SimulationModel():
 
         return risk.reshape(-1, 1)
 
-    def generate_data(self, num_samples=100, num_features=3,
-                      feature_weights=None,  treatment_weights=None):
+    def generate_data(self, num_samples, num_features,
+                      feature_weights,  treatment_weights):
         """
         Generating a dataset of simulated survival times from a given
         distribution through the hazard function using the Cox model
@@ -337,7 +337,7 @@ class SimulationModel():
         X_std = self.scaler.fit_transform(X)
         BX = self.risk_function(X_std).flatten()
 
-        lambda_t = np.exp(BX).flatten()  # 指数分布的真实参数
+        # lambda_t = np.exp(BX).flatten()  # 指数分布的真实参数
 
         # Building the survival times
         T = self.time_function(BX)
@@ -350,8 +350,10 @@ class SimulationModel():
 
         # Building dataset
         self.features = columns
-        self.dataset = pd.DataFrame(data=np.c_[X, time, E, lambda_t],
-                                    columns=columns + ['time', 'event', 'parameter'])
+        self.dataset = pd.DataFrame(data=np.c_[X, time, E],
+                                    columns=columns + ['time', 'event'])
+        # self.dataset = pd.DataFrame(data=np.c_[X, time, E, lambda_t],
+        #                             columns=columns + ['time', 'event', 'parameter'])
 
         # Building the time axis and time buckets
         self.times = np.linspace(0., max(self.dataset['time']), self.bins)

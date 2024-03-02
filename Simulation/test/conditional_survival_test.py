@@ -3,7 +3,7 @@ import pandas as pd
 from Simulation.conditional_density_estimation.conditional_density_estimate import conditional_density_true
 from Simulation.conditional_survival_function.conditional_survival_estimate import conditional_survival_estimate
 from Simulation.metrics import integrated_mean_squared_error, integrated_mean_squared_error_normalization, survival_true
-from Simulation.simulation_process.simulation_main import CounterfactualSurvFtn
+from Simulation.simulation_process.main_class import CounterfactualSurvFtn
 
 
 '''========== ========== 参数修改 ========== ========== '''

@@ -12,8 +12,9 @@ def get_x_y(dataset, col_event, col_time):
     y = np.empty(dtype=[(col_event, bool), (col_time, np.float64)], shape=dataset.shape[0])
     y[col_event] = (dataset[col_event] == 1).values
     y[col_time] = dataset[col_time].values
+    x = dataset.drop([col_event, col_time], axis=1)  # 除了event和time列，剩余是X
     # x = dataset.drop([col_event, col_time], axis=1)
-    x = dataset.drop([col_event, col_time, 'lambda'], axis=1)  # 除了event和time列，还应该去除lambda参数列，剩余是X
+    # x = dataset.drop([col_event, col_time, 'lambda'], axis=1)  # 除了event和time列，还应该去除lambda参数列，剩余是X
     return x, y
 
 
