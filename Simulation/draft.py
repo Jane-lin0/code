@@ -1,5 +1,50 @@
 # #
 
+
+
+
+# treatment_arg = 3.14
+# # Assuming self.treatment_arg is a float instead of an iterable
+# for a in [treatment_arg]:
+#     print(a)
+
+# import numpy as np
+#
+# res = np.arange(start=0, stop=0.9, step=0.1)
+
+# import numpy as np
+#
+# # def survival_true(survival_distribution, treatment_grid, time_grid, x_beta):
+# #     if survival_distribution == 'exponential':
+#
+# survival_distribution = 'exponential'
+# treatment_grid = np.arange(7)
+# time_grid = np.arange(500)
+# x_beta = np.arange(200)
+# # survival_res = survival_true(survival_distribution, treatment_grid, time_grid, x_beta)
+# true_survival = np.empty(shape=(0, len(time_grid)))
+# for a in treatment_grid:
+#     survival_of_a = []
+#     for t in time_grid:
+#         res_mid = -t * np.exp(x_beta - a)
+#         survival_a_t = np.mean(res_mid)
+#         survival_of_a.append(survival_a_t)
+#     true_survival = np.vstack([true_survival, survival_of_a])
+# else:
+    #     true_survival = None
+    #
+    # return true_survival
+
+
+# import numpy as np
+# mean = np.array([4, 5, 0.5])
+# covariance_matrix = np.array([[1, 0, 0.5],
+#                              [0, 1, 0.5],
+#                              [0.5, 0.5, 0.1]])
+# samples = np.random.multivariate_normal(mean=mean, cov=covariance_matrix, size=200)
+# X = samples[:, :-1]
+# beta = np.array([1, -1])
+# res = np.dot(X, beta)
 # def generate_data(survival_distribution, sample_num, a):
 #     mean = np.array([4, 5, 0.5])
 #     covariance_matrix = np.array([[1, 0, 0.5],

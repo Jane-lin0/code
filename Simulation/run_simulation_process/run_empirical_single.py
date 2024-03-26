@@ -45,7 +45,7 @@ if __name__ == '__main__':
     bandwidth = 0.25
     survival_distribution = 'exponential'
     run_date = datetime.today().strftime('%Y%m%d')
-    path_base = r"C:\Users\janline\Desktop\论文\论文代码\simulation_data\simulation_empirical"
+    path_base = r"C:\Users\janline\Desktop\毕业论文\论文代码\simulation_data\simulation_empirical"
     path = f"{path_base}/{run_date}/{N}"
     test_size = 0.2
     imse, mse, rmse, median_survival_time_bias = run_convergence_empirical(n=N, bandwidth=bandwidth,

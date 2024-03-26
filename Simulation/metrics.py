@@ -71,22 +71,38 @@ def survival_point_estimate(counterfactual_survival, treatment_point, time_point
     return counterfactual_survival[treatment_idx, time_idx]
 
 
-def survival_true(survival_distribution, treatment_grid, time_grid, u_0, u_1, arg_lambda):
+def survival_true(survival_distribution, treatment_grid, time_grid, x_beta):
     if survival_distribution == 'exponential':
         true_survival = np.empty(shape=(0, len(time_grid)))
-        for a in treatment_grid:
-            # idx = np.argmin(np.abs(treatment_testSet - a))
-            # x = feature_testSet[idx]
-            f = lambda x, t: np.exp(- arg_lambda(a, x) * t) / u_1
-            survival_func = np.vectorize(lambda t: integrate.quad(lambda x: f(x, t), u_0, u_0 + u_1)[0])  # 矢量化函数
-            # def survival_func(t):
-            #     return integrate.quad(lambda x: f(x, t), u_0, u_0 + u_1)[0]  # integrate.quad返回元组（result，error）
-            survival_of_a = survival_func(time_grid).reshape(1, -1)
+        # for a in treatment_grid:
+        for a in [treatment_grid]:   # 此时 treatment_grid 是 float
+            survival_of_a = []
+            for t in time_grid:
+                survival_a_t = np.mean(-t * np.exp(x_beta - a))
+                survival_of_a.append(survival_a_t)
             true_survival = np.vstack([true_survival, survival_of_a])
     else:
         true_survival = None
 
     return true_survival
+
+
+# def survival_true(survival_distribution, treatment_grid, time_grid, u_0, u_1, arg_lambda):
+#     if survival_distribution == 'exponential':
+#         true_survival = np.empty(shape=(0, len(time_grid)))
+#         for a in treatment_grid:
+#             # idx = np.argmin(np.abs(treatment_testSet - a))
+#             # x = feature_testSet[idx]
+#             f = lambda x, t: np.exp(- arg_lambda(a, x) * t) / u_1
+#             survival_func = np.vectorize(lambda t: integrate.quad(lambda x: f(x, t), u_0, u_0 + u_1)[0])  # 矢量化函数
+#             # def survival_func(t):
+#             #     return integrate.quad(lambda x: f(x, t), u_0, u_0 + u_1)[0]  # integrate.quad返回元组（result，error）
+#             survival_of_a = survival_func(time_grid).reshape(1, -1)
+#             true_survival = np.vstack([true_survival, survival_of_a])
+#     else:
+#         true_survival = None
+#
+#     return true_survival
 
 
 # def survival_true(survival_distribution, treatment_grid, time_grid, treatment_testSet, lambda_testSet):

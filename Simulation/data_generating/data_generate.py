@@ -18,12 +18,13 @@ def generate_data(survival_distribution, sample_num, a):
         censor_time = np.random.uniform(low=0, high=np.max(true_time), size=sample_num)
         observed_time = np.minimum(true_time, censor_time)
         event = 1 * (observed_time == true_time)
+        x_beta = np.dot(X, beta)
         dataset = pd.DataFrame(
             data=np.c_[X, treatment, observed_time, event],
             columns=['x1', 'x2', 'treatment', 'time', 'event']
         )
         print(f"event rate of dataset: {sum(event) / sample_num}")
-        return dataset
+        return dataset, x_beta    # 返回 x_beta 用于计算 Oracle真实生存函数
 
     elif survival_distribution == 'weibull':
         return None
@@ -32,5 +33,5 @@ def generate_data(survival_distribution, sample_num, a):
         return None
 
 
-# if __name__ == "__main__":
-#     data = generate_data(survival_distribution='exponential', sample_num=100)
+if __name__ == "__main__":
+    data = generate_data(survival_distribution='exponential', sample_num=100, a=0.2)

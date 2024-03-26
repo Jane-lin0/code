@@ -19,56 +19,56 @@ from Simulation.output import equal_space, subset_index, subset, treatment_subse
 
 class CounterfactualSurvFtn():
     def __init__(self, path):
-        self.a = None
         self.survival_true_subset = None
         self.survival_pred_subset = None
         self.data_path = path   # the path to save data
         # self.cv = cv    # cross validation for train validation data
         self.survival_distribution = None
         self.time_grid = None    # 估计结果中的 time 取值网格点
-        self.treatment_grid = None  # 估计结果中的 treatment 取值网格点
-        # self.treatment_grid_eval = None  # 用于误差评估的 treatment
+        self.treatment_arg = 0.5     # 先看单个 treatment 取值的结果是否收敛
+        # self.treatment_grid = None  # 估计结果中的 treatment 取值网格点
+        # self.treatment_eval_grid = np.arange(start=0, stop=0.9, step=0.1)   # 可能取值偏小
         # self.bandwidth = None     # 单独传入，便于经验法则计算
         self.error_for_bandwidth_list = None  # 画 bandwidth 选择的图
-        self.treatment_eval_grid = np.arange(start=0.2, end=0.9, step=0.1)
+        self.x_beta = None
         # np.linspace(0, 1, 11)  # 生成 11 个数：0，0.1，···，1
         # self.u_0 = None
         # self.u_1 = None  # the weights to generate X, X = u_0 + u_1 * uniform[0,1]
         # self.w = None  # the weights to generate A, A = w * X + N(0,1)
         # self.arg_lambda = None  # the function to generate argument lambda
 
-    def data_generate(self, sample_num, survival_distribution, test_size, cv):
-        """
-        @param sample_num:
-        @param survival_distribution: exponential, weibull, gompertz, log_logistic, log_normal
-        @param test_size:
-        @return:
-        """
-        self.survival_distribution = survival_distribution
-        sim = SimulationModel(survival_distribution=self.survival_distribution,
-                              risk_type='linear',
-                              alpha=1,
-                              beta=1
-                              )
-        dataset = sim.generate_data(num_samples=sample_num, num_features=4,
-                                    feature_weights=[-2, 1, 2] + [1],  # beta  gamma
-                                    treatment_weights=[4, 2, 1])  # W
-        # lambda = exp(-1 * x + 1 * a) * alpha , a = 2 * x
-        dataset.columns = ['x1', 'x2', 'x3', 'a', 'o', 'e', 'lambda']
-        # self.treatment_quantile = np.percentile(dataset['a'], [0, 25, 50, 75, 100])  # 后续对估计进行评估
-        train_test_data_split(dataset, test_size=test_size, save_path=self.data_path)
-        # train test split，不设置 random_state，避免重复
-        df_train = pd.read_excel(self.data_path+'data.xlsx', sheet_name='train')
-        train_validation_split(df=df_train, cv=cv, save_path=self.data_path)  # split to validation and test set
-        print(f"dataset generated and saved to {self.data_path}")
+    # def data_generate(self, sample_num, survival_distribution, test_size, cv):
+    #     """
+    #     @param sample_num:
+    #     @param survival_distribution: exponential, weibull, gompertz, log_logistic, log_normal
+    #     @param test_size:
+    #     @return:
+    #     """
+    #     self.survival_distribution = survival_distribution
+    #     sim = SimulationModel(survival_distribution=self.survival_distribution,
+    #                           risk_type='linear',
+    #                           alpha=1,
+    #                           beta=1
+    #                           )
+    #     dataset = sim.generate_data(num_samples=sample_num, num_features=4,
+    #                                 feature_weights=[-2, 1, 2] + [1],  # beta  gamma
+    #                                 treatment_weights=[4, 2, 1])  # W
+    #     # lambda = exp(-1 * x + 1 * a) * alpha , a = 2 * x
+    #     dataset.columns = ['x1', 'x2', 'x3', 'a', 'o', 'e', 'lambda']
+    #     # self.treatment_quantile = np.percentile(dataset['a'], [0, 25, 50, 75, 100])  # 后续对估计进行评估
+    #     train_test_data_split(dataset, test_size=test_size, save_path=self.data_path)
+    #     # train test split，不设置 random_state，避免重复
+    #     df_train = pd.read_excel(self.data_path+'data.xlsx', sheet_name='train')
+    #     train_validation_split(df=df_train, cv=cv, save_path=self.data_path)  # split to validation and test set
+    #     print(f"dataset generated and saved to {self.data_path}")
 
     def data_generate_empirical(self, survival_distribution, sample_num, test_size):
-        # self.survival_distribution = survival_distribution
+        self.survival_distribution = survival_distribution
         # self.u_0, self.u_1 = 2, 1  # the weights to generate X, X = u_0 + u_1 * uniform[0,1]
         # self.w = 2                 # the weights to generate A, A = w * X + N(0,1)
         # self.arg_lambda = lambda a, x: a + x    # the function to generate argument lambda
-        dataset = generate_data(survival_distribution=survival_distribution, sample_num=sample_num, a=self.a)  # 设定 X、A 为正态分布
-        dataset.columns = ['x', 'a', 'o', 'e']
+        dataset, self.x_beta = generate_data(survival_distribution=survival_distribution, sample_num=sample_num, a=self.treatment_arg)  # 设定 X、A 为正态分布
+        dataset.columns = ['x1', 'x2', 'a', 'o', 'e']
         train_test_data_split(dataset, test_size=test_size, save_path=self.data_path)  # 不设置 random_state以避免重复
         print(f"dataset generated and saved to {self.data_path}")
 
@@ -147,8 +147,9 @@ class CounterfactualSurvFtn():
         kernel setting, calculate hat{Sa(t)}：每个 a_grid 下的生存函数估计
         '''
         # a = 1
+        self.treatment_grid = self.treatment_arg
+        # self.treatment_grid = np.arange(0, max(a_approx)+0.01, 0.01)  # 连续 treatment 估计取值的网格点，间隔为 0.01
         # self.treatment_grid = np.linspace(0, max(a_approx), num=n_validation)  # 连续 treatment 估计取值的网格点，可调整
-        self.treatment_grid = np.arange(0, max(a_approx)+0.01, 0.01)  # 连续 treatment 估计取值的网格点，间隔为 0.01
         # if not self.treatment_grid_eval:
         #     self.treatment_grid_eval = np.percentile(self.treatment_grid, [5, 25, 50, 75, 95])    # 取5个分位数
         # self.treatment_grid = np.linspace(min(a_approx), max(a_approx), num=n_validation)  # 连续 treatment 估计取值的网格点，可调整
@@ -156,7 +157,9 @@ class CounterfactualSurvFtn():
 
         # 根据权重计算反事实生存函数
         weight = np.empty(shape=(0, n_validation))
-        for a in self.treatment_grid:
+        # for a in self.treatment_grid:
+        # for a in self.treatment_eval_grid:
+        for a in [self.treatment_arg]:         # treatment_arg 是浮点数，加上[]变成可迭代的列表
             # kernel_values = gaussian_kernel(a_approx, a, self.bandwidth)
             kernel_values = gaussian_kernel(a_approx, a, bandwidth)
             w_a = pi * kernel_values  # ndarray:(len(df_test),)
@@ -175,10 +178,11 @@ class CounterfactualSurvFtn():
         @param method: the error calculation method, imse, mse, rmse, bias
         @return: estimate error
         """
-        survival_true_values = survival_true(self.survival_distribution, self.treatment_grid, self.time_grid,
-                                             self.u_0, self.u_1, self.arg_lambda)
+        # survival_true_values = survival_true(self.survival_distribution, self.treatment_grid, self.time_grid,
+        #                                      self.u_0, self.u_1, self.arg_lambda)
         # row_index, col_index = subset_index(survival_pred.shape, row_num=self.treatment_num, col_num=survival_pred.shape[1])
-        row_index = np.searchsorted(self.treatment_grid, self.treatment_eval_grid)
+        survival_true_subset = survival_true(self.survival_distribution, self.treatment_arg, self.time_grid, self.x_beta)  # 用 Oracle 计算
+        row_index = np.searchsorted(self.treatment_grid, self.treatment_arg)
         col_index = np.arange(len(self.time_grid))
         # col_index = equal_space(length=survival_pred.shape[1], indices_num=survival_pred.shape[1])
         # self.treatment_eval_grid 的 indices: self.treatment_grid 的前 11 行
@@ -186,11 +190,13 @@ class CounterfactualSurvFtn():
         # row_index, col_index = treatment_subset_index(survival_pred.shape, row_list=treatment_eval_grid,
         #                                               col_num=survival_pred.shape[1])
         survival_pred_subset = subset(survival_pred, row_index, col_index)
-        survival_true_subset = survival_true(self.survival_distribution, self.treatment_grid[row_index], self.time_grid,
-                                        self.u_0, self.u_1, self.arg_lambda)
+        # survival_true_subset = survival_true(self.survival_distribution, self.treatment_grid[row_index], self.time_grid,
+        #                                 self.u_0, self.u_1, self.arg_lambda)
         self.survival_pred_subset = survival_pred_subset
         self.survival_true_subset = survival_true_subset
-        treatment_num = len(self.treatment_eval_grid)
+        # self.survival_true_subset = survival_true_subset
+        treatment_num = len(self.treatment_arg)
+        # treatment_num = len(self.treatment_eval_grid)
         if survival_pred_subset.shape[0] != treatment_num or survival_true_subset.shape[0] != treatment_num:
             survival_pred_subset = survival_pred_subset.reshape(treatment_num, -1)
             survival_true_subset = survival_true_subset.reshape(treatment_num, -1)
@@ -198,7 +204,8 @@ class CounterfactualSurvFtn():
         #     pass
 
         if method == 'imse':
-            imse = integrated_mean_squared_error_normalization(survival_pred, survival_true_values, self.time_grid)
+            imse = integrated_mean_squared_error_normalization(survival_pred_subset, survival_true_subset, self.time_grid)
+            # imse = integrated_mean_squared_error_normalization(survival_pred, survival_true_values, self.time_grid)
             return imse
 
         elif method == 'mse':
