@@ -2,6 +2,19 @@
 
 
 
+# import numpy as np
+#
+# ndarray = np.arange(270).reshape(27, 10)
+# row_index = np.int64(5)
+# col_index = np.arange(10)
+# # ndarray1 = ndarray[row_index][:, col_index]
+# # 使用逗号同时指定行和列的索引
+# ndarray1 = ndarray[row_index, col_index]
+
+# import numpy as np
+# treatment_grid = np.arange(start=0, stop=2.8, step=0.1)
+# treatment_arg = 0.5
+# row_index = np.searchsorted(treatment_grid, treatment_arg)
 
 # treatment_arg = 3.14
 # # Assuming self.treatment_arg is a float instead of an iterable

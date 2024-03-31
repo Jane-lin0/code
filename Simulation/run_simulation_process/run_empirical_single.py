@@ -31,26 +31,26 @@ def run_convergence_empirical(n, bandwidth, survival_distribution, path, test_si
 
     # 误差评估
     IMSE = model.estimate_error(counterfactual_survival_pred, method='imse')
-    MSE = model.estimate_error(counterfactual_survival_pred, method='mse')
+    RISE = model.estimate_error(counterfactual_survival_pred, method='rise')
     RMSE = model.estimate_error(counterfactual_survival_pred, method='rmse')
     median_survival_time_bias = model.estimate_error(counterfactual_survival_pred, method='bias')
 
-    model.visualization()   # 生存函数的估计和真实值对比
+    # model.visualization()   # 生存函数的估计和真实值对比  # treatment A 取单个值时无法画图
 
-    return IMSE, MSE, RMSE, median_survival_time_bias
+    return IMSE, RISE, RMSE, median_survival_time_bias
 
 
-if __name__ == '__main__':
-    N = 200
-    bandwidth = 0.25
-    survival_distribution = 'exponential'
-    run_date = datetime.today().strftime('%Y%m%d')
-    path_base = r"C:\Users\janline\Desktop\毕业论文\论文代码\simulation_data\simulation_empirical"
-    path = f"{path_base}/{run_date}/{N}"
-    test_size = 0.2
-    imse, mse, rmse, median_survival_time_bias = run_convergence_empirical(n=N, bandwidth=bandwidth,
-                                                                           survival_distribution=survival_distribution,
-                                                                           path=path, test_size=test_size)
+# if __name__ == '__main__':
+#     N = 200
+#     bandwidth = 0.25
+#     survival_distribution = 'exponential'
+#     run_date = datetime.today().strftime('%Y%m%d')
+#     path_base = r"C:\Users\janline\Desktop\毕业论文\论文代码\simulation_data\simulation_empirical"
+#     path = f"{path_base}/{run_date}/{N}"
+#     test_size = 0.2
+#     imse, mse, rmse, median_survival_time_bias = run_convergence_empirical(n=N, bandwidth=bandwidth,
+#                                                                            survival_distribution=survival_distribution,
+#                                                                            path=path, test_size=test_size)
 
 
 
